@@ -56,17 +56,18 @@ Szenen), werden in **einer** Anfrage an die Box gebündelt.
 3. Im Menü **Developer Mode** einen **Token erzeugen** und kopieren. Er wird nur einmal angezeigt.
 4. Im Router der TaHoma Switch eine **feste IP-Adresse** zuweisen (DHCP-Reservierung).
 
-### 2. Addon-Archiv bauen
+### 2. Addon-Archiv herunterladen
 
-Das installierbare Archiv ist eine `.tar`-Datei. Voraussetzung ist Node.js ab Version 18:
+Das installierbare Archiv ist eine `.tar`-Datei. `de.dennisfalk.freeathome.somfy-<version>.tar` aus dem
+[neuesten Release](https://github.com/dn-falk/somfy-freeathome-connector/releases/latest)
+herunterladen.
+
+Alternativ selbst bauen (Node.js ab Version 18):
 
 ```bash
 npm ci
 npm run pack
 ```
-
-Das erzeugt `de.dennisfalk.freeathome.somfy-<version>.tar`. Alternativ liegt das Archiv als Artefakt am
-GitHub-Actions-Lauf bzw. an einem Release.
 
 ### 3. Addon hochladen
 
@@ -162,6 +163,18 @@ npm run build && npm start
 startet eine simulierte Box mit Fahrzeiten und Rückmeldungen. Das Addon dann mit
 `TAHOMA_INSECURE_HTTP=1 npm start` starten (unverschlüsseltes HTTP, nur für die Entwicklung) und in
 den Einstellungen IP des PCs, Port `18443` und Token `dev-token` eintragen.
+
+### Releases
+
+Releases legt GitHub Actions an. Enthält `main` eine Version, die noch nicht veröffentlicht ist,
+führt die CI die Tests aus, baut das Archiv und veröffentlicht das Release `v<Version>` mit der
+`.tar`-Datei. Für eine neue Version die Versionsnummer auf einem Branch erhöhen und in `main`
+mergen:
+
+```bash
+npm version 1.1.0 --no-git-tag-version   # package.json und package-lock.json
+# und dieselbe "version" in free-at-home-metadata.json eintragen
+```
 
 ### Aufbau
 
