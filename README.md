@@ -1,197 +1,196 @@
-# Somfy-TaHoma-Connector für free@home (inoffiziell)
+# Somfy-TaHoma-Connector for free@home (unofficial)
 
-free@home-Addon für den **System Access Point 2.0**, das **Somfy-io-Rollläden** über die lokale API
-(Developer Mode) einer **Somfy TaHoma Switch** steuert. Jeder Rollladen erscheint in free@home als
-normaler Rollladenaktor und lässt sich mit free@home-Tastern, in der App, in Szenen und
-Zeitprogrammen verwenden.
+**English** | [Deutsch](README.de.md)
 
-> **Inoffizielles Projekt:** Dieses Addon ist ein privates Community-Projekt. Es wird weder von Somfy
-> noch von ABB/Busch-Jaeger entwickelt, geprüft, unterstützt oder empfohlen und steht in keiner
-> Verbindung zu diesen Unternehmen. Die Markennamen werden nur genannt, um zu beschreiben, mit welchen
-> Produkten das Addon zusammenarbeitet. Details unter
-> [Lizenz und rechtliche Hinweise](#lizenz-und-rechtliche-hinweise).
+free@home addon for the **System Access Point 2.0** that controls **Somfy io roller shutters** through
+the local API (Developer Mode) of a **Somfy TaHoma Switch**. Every roller shutter shows up in
+free@home as a regular blind actuator and can be used with free@home push buttons, in the app, in
+scenes and in timers.
 
-- **Lokal und ohne Cloud:** Das Addon läuft auf dem SysAP und spricht die TaHoma Switch direkt im
-  Heimnetz an.
-- **Kurze Reaktionszeit:** Ein Tastendruck wird sofort als Befehl an die Box geschickt. Es gibt kein
-  Polling im Steuerpfad, und die Verbindungen bleiben offen (Keep-Alive).
-- **Rückmeldung:** Position und Fahrtrichtung werden in free@home angezeigt, auch wenn der Rollladen
-  über eine Somfy-Fernbedienung oder die TaHoma-App bewegt wurde.
-- **Konfiguration komplett in der Addon-Oberfläche** der free@home-App bzw. der SysAP-Weboberfläche.
+> **Unofficial project:** This addon is a private community project. It is not developed, reviewed,
+> supported or endorsed by Somfy or ABB/Busch-Jaeger and is not affiliated with these companies. The
+> brand names are only used to describe which products the addon works with. See
+> [License and legal notes](#license-and-legal-notes).
 
-> Das Somfy **Connectivity Kit** wird nicht unterstützt. Somfy hat den Developer Mode auf dem Kit
-> abgeschaltet, es gibt dort keine lokale API mehr.
+- **Local, no cloud:** The addon runs on the SysAP and talks to the TaHoma Switch directly in the
+  home network.
+- **Fast response:** A button press is sent to the box as a command right away. There is no polling
+  in the control path, and the connections are kept open (keep-alive).
+- **Feedback:** Position and direction of travel are shown in free@home, even when the shutter was
+  moved with a Somfy remote or the TaHoma app.
+- **Configured entirely in the addon settings** of the free@home app or the SysAP web interface.
 
-## Funktionen
+> The Somfy **Connectivity Kit** is not supported. Somfy has disabled the Developer Mode on the kit,
+> so it no longer has a local API.
 
-| free@home | Wirkung am Somfy-Rollladen |
+## Features
+
+| free@home | Effect on the Somfy roller shutter |
 |---|---|
-| Taster **lang** drücken (auf/ab) | `open` / `close`: fährt ganz auf bzw. zu |
-| Taster **kurz** drücken, Rollladen fährt | `stop` |
-| Taster **kurz** drücken, Rollladen steht | einstellbar: nur Stopp (Standard), Lieblingsposition „my“ oder ganz auf/zu |
-| Position in App, Szene oder Zeitprogramm | `setClosure(x)`, bei 0 % bzw. 100 % `open` / `close` |
-| Zwangsführung auf/ab | fährt in die Position und sperrt die Bedienung; „Zwangsführung aus + alte Position“ fährt zurück |
-| Rollladen oder Box nicht erreichbar | Rollladen wird in free@home als „nicht erreichbar“ angezeigt |
+| **Long** press (up/down) | `open` / `close`: moves fully up or down |
+| **Short** press while the shutter moves | `stop` |
+| **Short** press while the shutter stands still | configurable: stop only (default), favourite position "my" or fully up/down |
+| Position from the app, a scene or a timer | `setClosure(x)`; `open` / `close` for 0 % and 100 % |
+| Forced position up/down | moves to that position and locks operation; "forced position off + previous position" moves back |
+| Shutter or box not reachable | the shutter is shown as "not reachable" in free@home |
 
-Befehle für mehrere Rollläden, die gleichzeitig eintreffen (ein Taster für mehrere Rollläden,
-Szenen), werden in **einer** Anfrage an die Box gebündelt.
+Commands for several shutters that arrive at the same time (one push button for several shutters,
+scenes) are sent to the box in **one** request.
 
-## Voraussetzungen
+## Requirements
 
-- free@home **System Access Point 2.0** mit Firmware **3.0 oder neuer**
-- In der free@home-next-App: **Mehr → Installationseinstellungen → Local API** aktiviert
-- **Somfy TaHoma Switch** mit eingelernten **io-homecontrol-Rollläden**
+- free@home **System Access Point 2.0** with firmware **3.0 or later**
+- In the free@home next app: **More → Installation settings → Local API** enabled
+- **Somfy TaHoma Switch** with paired **io-homecontrol roller shutters**
 
 ## Installation
 
-### 1. TaHoma Switch vorbereiten
+### 1. Prepare the TaHoma Switch
 
-1. Die TaHoma Switch in der App **„TaHoma by Somfy“** einrichten und die Rollläden einlernen.
-   Beim Wechsel vom Connectivity Kit werden die Rollläden an der neuen Box eingelernt (siehe
-   Anleitung von Somfy).
-2. **Developer Mode aktivieren:** In der App die Einstellungen der Box öffnen und **7× auf die PIN**
-   der Box tippen (z. B. `2001-1234-5678`).
-3. Im Menü **Developer Mode** einen **Token erzeugen** und kopieren. Er wird nur einmal angezeigt.
-4. Im Router der TaHoma Switch eine **feste IP-Adresse** zuweisen (DHCP-Reservierung).
+1. Set up the TaHoma Switch in the **"TaHoma by Somfy"** app and pair the roller shutters. When
+   switching from the Connectivity Kit, the shutters are paired with the new box (see Somfy's
+   instructions).
+2. **Enable the Developer Mode:** In the app, open the settings of the box and **tap the PIN** of the
+   box **7 times** (e.g. `2001-1234-5678`).
+3. In the **Developer Mode** menu, **generate a token** and copy it. It is shown only once.
+4. Give the TaHoma Switch a **fixed IP address** in your router (DHCP reservation).
 
-### 2. Addon-Archiv bauen
+### 2. Build the addon archive
 
-Das installierbare Archiv ist eine `.tar`-Datei. Voraussetzung ist Node.js ab Version 18:
+The installable archive is a `.tar` file. Node.js 18 or later is required:
 
 ```bash
 npm ci
 npm run pack
 ```
 
-Das erzeugt `de.dennisfalk.freeathome.somfy-<version>.tar`. Alternativ liegt das Archiv als Artefakt am
-GitHub-Actions-Lauf bzw. an einem Release.
+This creates `de.dennisfalk.freeathome.somfy-<version>.tar`. The archive is also available as an
+artifact of the GitHub Actions run or attached to a release.
 
-### 3. Addon hochladen
+### 3. Upload the addon
 
-- **free@home-next-App:** Mehr → Installationseinstellungen → Addons → **Hochladen**, dann die
-  `.tar`-Datei auswählen.
-- oder über die **Weboberfläche** des System Access Point
-- oder per Kommandozeile:
-  `FREEATHOME_BASE_URL=http://<IP-SysAP> FREEATHOME_API_USERNAME=<Benutzer> FREEATHOME_API_PASSWORD=<Passwort> npx free-at-home-cli upload`
+- **free@home next app:** More → Installation settings → Addons → **Upload**, then select the
+  `.tar` file.
+- or through the **web interface** of the System Access Point
+- or from the command line:
+  `FREEATHOME_BASE_URL=http://<SysAP-IP> FREEATHOME_API_USERNAME=<user> FREEATHOME_API_PASSWORD=<password> npx free-at-home-cli upload`
 
-Danach erscheint das Addon in der Addon-Liste als **„Somfy-TaHoma-Connector (inoffiziell)“** und muss
-als **aktiv** angezeigt werden.
+The addon then appears in the addon list as **"Somfy-TaHoma-Connector (unofficial)"** and must be
+shown as **active**.
 
-### 4. Einstellungen
+### 4. Settings
 
-In den Einstellungen des Addons:
+In the settings of the addon:
 
-| Einstellung | Bedeutung |
+| Setting | Meaning |
 |---|---|
-| **IP-Adresse** | IP der TaHoma Switch, z. B. `192.168.1.50` |
-| **Port** | `8443` (Standard der lokalen API) |
-| **Token** | Token aus dem Developer Mode |
-| PIN der Box (optional) | z. B. `2001-1234-5678`. Damit wird zusätzlich geprüft, ob das Zertifikat zu genau dieser Box gehört. |
-| Zertifikat prüfen | Standard an: nur Boxen mit Zertifikat der Somfy/Overkiz-CA werden akzeptiert |
-| Kurzer Tastendruck, wenn der Rollladen steht | nur Stopp (Standard) · Lieblingsposition (my) · ganz auf/zu |
-| Ausgeschlossene Rollläden | kommagetrennte Namen aus der TaHoma-App, die nicht in free@home erscheinen sollen |
-| Statusabfrage im Ruhezustand | Abfrageintervall für Änderungen, solange nichts fährt (Standard 3 s, während einer Fahrt 1 s). Befehle werden unabhängig davon **sofort** gesendet. |
-| Bündelung von Gruppenbefehlen | Zeitfenster, in dem Befehle für mehrere Rollläden zusammengefasst werden (Standard 10 ms) |
-| Debug-Protokoll | ausführliche Meldungen im Journal des SysAP |
+| **IP address** | IP of the TaHoma Switch, e.g. `192.168.1.50` |
+| **Port** | `8443` (default of the local API) |
+| **Token** | Token from the Developer Mode |
+| Gateway PIN (optional) | e.g. `2001-1234-5678`. Additionally checks that the certificate belongs to exactly this box. |
+| Verify certificate | On by default: only boxes with a certificate from the Somfy/Overkiz CA are accepted |
+| Short press while the shutter is not moving | only stop (default) · favourite position (my) · fully up/down |
+| Excluded roller shutters | comma-separated names from the TaHoma app that should not appear in free@home |
+| Status update interval while idle | how often the addon asks for changes while nothing moves (default 3 s, 1 s while a shutter moves). Commands are always sent **immediately**, independent of this setting. |
+| Group commands window | time window in which commands for several shutters are combined (default 10 ms) |
+| Debug logging | detailed messages in the SysAP journal |
 
-Nach dem Speichern verbindet sich das Addon. Die Zeile **Status** zeigt z. B. „Verbunden, 5 Rollläden“.
-**Rollläden neu einlesen** übernimmt neu eingelernte Rollläden aus der TaHoma, ohne das Addon neu zu
-starten. Das passiert auch automatisch, wenn die Box das Hinzufügen oder Entfernen eines Geräts meldet.
+After saving, the addon connects. The **Status** line shows e.g. "Connected, 5 roller shutter(s)".
+**Reload roller shutters** adds newly paired shutters from the TaHoma without restarting the
+addon. This also happens automatically when the box reports that a device was added or removed.
 
-### 5. In free@home verwenden
+### 5. Use in free@home
 
-- Die Rollläden erscheinen mit ihrem Namen aus der TaHoma-App als **Rollladenaktoren** in der
-  Geräteliste. Dort wie gewohnt einem Raum zuordnen und bei Bedarf umbenennen.
-- **Taster verknüpfen:** Den Rollladen- bzw. Jalousie-Sensor (Taster) mit dem Rollladen verknüpfen,
-  genauso wie bei einem echten free@home-Aktor.
-- Szenen und Zeitprogramme funktionieren wie bei anderen Aktoren: Der SysAP behandelt die
-  virtuellen Geräte des Addons wie echte Geräte.
+- The roller shutters appear in the device list as **blind actuators**, named as in the TaHoma
+  app. Assign them to a room and rename them if needed, as usual.
+- **Link push buttons:** Link the blind sensor (push button) with the roller shutter, just like with
+  a real free@home actuator.
+- Scenes and timers work as with other actuators: the SysAP treats the virtual devices of the addon
+  like real devices.
 
-Die free@home-Geräte-ID wird aus der io-Adresse des Motors gebildet (`somfy-io-<adresse>`). Wird die
-Box getauscht und der Motor neu eingelernt, bleiben Geräte und Verknüpfungen in free@home erhalten.
+The free@home device ID is derived from the io address of the motor (`somfy-io-<address>`). If the
+box is replaced and the motor is paired again, the devices and links in free@home are kept.
 
-## Fehlerbehebung
+## Troubleshooting
 
-| Status / Symptom | Ursache und Lösung |
+| Status / symptom | Cause and solution |
 |---|---|
-| „Konfiguration nötig: …“ | IP-Adresse oder Token fehlt bzw. ist ungültig. |
-| „Token wird von der TaHoma Switch abgelehnt“ | Token falsch oder in der App gelöscht → neuen Token erzeugen und eintragen. |
-| „TaHoma Switch nicht erreichbar“ | IP prüfen (feste IP?), Box eingeschaltet? Nach Firmware-Updates prüfen, ob der Developer Mode noch aktiv ist. Das Addon verbindet sich automatisch neu. |
-| Zertifikatsfehler im Journal | PIN der Box prüfen; notfalls „Zertifikat prüfen“ ausschalten. |
-| Rollladen fehlt | Nur io-Rollläden (Geräteklasse „RollerShutter“) werden übernommen. „Ausgeschlossene Rollläden“ prüfen, dann „Rollläden neu einlesen“. |
-| Rollladen „nicht erreichbar“ | Die Box meldet den Motor als nicht erreichbar (Funk, Stromausfall). |
+| "Configuration needed: …" | IP address or token is missing or invalid. |
+| "Token rejected by the TaHoma Switch" | Wrong token, or it was deleted in the app → generate a new token and enter it. |
+| "TaHoma Switch not reachable" | Check the IP (fixed IP?) and whether the box is switched on. After firmware updates, check that the Developer Mode is still active. The addon reconnects automatically. |
+| Certificate errors in the journal | Check the gateway PIN; if necessary, turn off "Verify certificate". |
+| Roller shutter missing | Only io roller shutters (device class "RollerShutter") are included. Check "Excluded roller shutters", then use "Reload roller shutters". |
+| Roller shutter "not reachable" | The box reports the motor as not reachable (radio, power failure). |
 
-Die Meldungen des Addons stehen im Journal des SysAP. Mit gesetzten `FREEATHOME_*`-Variablen
-zeigt `npm run journal` sie an. Für Details in den Einstellungen das **Debug-Protokoll** einschalten.
+The addon writes its messages to the SysAP journal. With the `FREEATHOME_*` variables set,
+`npm run journal` shows them. For details, turn on **Debug logging** in the settings.
 
-## Einschränkungen
+## Limitations
 
-- Unterstützt werden **io-homecontrol-Rollläden** (`io://…`, Geräteklasse `RollerShutter`).
-  RTS-Motoren, Raffstores/Jalousien mit Lamellen und Markisen werden nicht angelegt.
-- Getestet wurde mit Unit- und Integrationstests gegen eine simulierte TaHoma Switch und einen
-  simulierten System Access Point, jeweils mit der echten free@home-Library. Ein Test mit echter
-  Hardware steht noch aus.
-- **Speicher:** Der SysAP erlaubt einem Addon höchstens 64 MB. Auf einem x86-64-PC mit Node 18 belegt
-  das Addon mit 12 Rollläden etwa 60–65 MB (kurzzeitig bis ~70 MB). Davon entfallen rund 44 MB auf
-  Node.js selbst und der größte Teil des Rests auf die free@home-Library; der Addon-Code macht nur
-  wenig aus. Auf dem ARM-basierten SysAP weichen die Werte ab und müssen dort noch geprüft werden.
-  Das Addon lädt deshalb nur die benötigten Teile der Library.
+- Only **io-homecontrol roller shutters** (`io://…`, device class `RollerShutter`) are supported.
+  RTS motors, venetian blinds with slats and awnings are not added to free@home.
+- Tested with unit and integration tests against a simulated TaHoma Switch and a simulated System
+  Access Point, both with the real free@home library. A test with real hardware is still pending.
+- **Memory:** The SysAP allows an addon at most 64 MB. On an x86-64 PC with Node 18 the addon uses
+  about 60–65 MB with 12 shutters (briefly up to ~70 MB). About 44 MB of this is Node.js itself and
+  most of the rest is the free@home library; the addon code itself accounts for little. On the
+  ARM-based SysAP the values differ and still have to be checked there. For this reason the addon
+  loads only the parts of the library it needs.
 
-## Entwicklung
+## Development
 
 ```bash
 npm ci
-npm test            # Unit- und Integrationstests (TaHoma-Simulator, Fake-SysAP, echte free@home-Library)
+npm test            # unit and integration tests (TaHoma simulator, fake SysAP, real free@home library)
 npm run build       # TypeScript -> build/
-npm run pack        # installierbares Addon-Archiv (.tar)
+npm run pack        # installable addon archive (.tar)
 ```
 
-**Addon auf dem PC gegen den eigenen SysAP laufen lassen.** Das Addon darf dabei nicht
-gleichzeitig auf dem SysAP laufen, sonst entstehen doppelte Geräte.
+**Running the addon on a PC against your own SysAP.** The addon must not run on the SysAP at the
+same time, otherwise devices are duplicated.
 
 ```bash
-export FREEATHOME_BASE_URL=http://<IP-SysAP>
-export FREEATHOME_API_USERNAME=<Benutzer der Local API>
-export FREEATHOME_API_PASSWORD=<Passwort>
+export FREEATHOME_BASE_URL=http://<SysAP-IP>
+export FREEATHOME_API_USERNAME=<Local API user>
+export FREEATHOME_API_PASSWORD=<password>
 npm run build && npm start
 ```
 
-**Ohne TaHoma Switch:** `npm run mock -- --port 18443 --token dev-token --shutters "Wohnzimmer,Küche"`
-startet eine simulierte Box mit Fahrzeiten und Rückmeldungen. Das Addon dann mit
-`TAHOMA_INSECURE_HTTP=1 npm start` starten (unverschlüsseltes HTTP, nur für die Entwicklung) und in
-den Einstellungen IP des PCs, Port `18443` und Token `dev-token` eintragen.
+**Without a TaHoma Switch:** `npm run mock -- --port 18443 --token dev-token --shutters "Living room,Kitchen"`
+starts a simulated box with travel times and feedback. Then start the addon with
+`TAHOMA_INSECURE_HTTP=1 npm start` (unencrypted HTTP, for development only) and enter the IP of the
+PC, port `18443` and token `dev-token` in the settings.
 
-### Aufbau
+### Structure
 
 ```
 src/
-  main.ts                  Einstieg: free@home-Library, Addon-Konfiguration, RPC, Signale
-  app.ts                   (Neu-)Start der Verbindung bei Konfigurationsänderungen, Status
-  config.ts                Einstellungen aus der Addon-Oberfläche lesen und prüfen
-  status.ts                Statusanzeige (Einstellungen, Application State)
-  bridge/bridge.ts         TaHoma-Geräte <-> virtuelle free@home-Aktoren
-  bridge/shutterController.ts  Steuerlogik je Rollladen (Taster, Position, Stopp, Zwangsführung, Rückmeldung)
-  fah/                     virtueller free@home-Rollladenaktor, Datenpunkte, Geräte-Registry
-  tahoma/                  Client der lokalen TaHoma-API (HTTPS, Overkiz-CA), Befehlswarteschlange, Event-Session
-test/                      Tests inkl. TaHoma-Simulator und Fake-System-Access-Point
-tools/mock-tahoma.ts       simulierte TaHoma Switch für die Entwicklung
+  main.ts                  entry point: free@home library, addon configuration, RPC, signals
+  app.ts                   (re)starts the connection on configuration changes, status
+  config.ts                reads and checks the settings from the addon UI
+  status.ts                status display (settings, application state)
+  bridge/bridge.ts         TaHoma devices <-> virtual free@home actuators
+  bridge/shutterController.ts  control logic per shutter (push buttons, position, stop, forced position, feedback)
+  fah/                     virtual free@home blind actuator, datapoints, device registry
+  tahoma/                  client for the local TaHoma API (HTTPS, Overkiz CA), command queue, event session
+test/                      tests incl. TaHoma simulator and fake System Access Point
+tools/mock-tahoma.ts       simulated TaHoma Switch for development
 ```
 
-## Lizenz und rechtliche Hinweise
+## License and legal notes
 
-- **Kein offizielles Produkt:** Dieses Addon ist ein unabhängiges Community-Projekt. Es ist kein
-  Produkt von Somfy oder ABB/Busch-Jaeger. Diese Unternehmen haben es weder beauftragt noch geprüft,
-  zertifiziert oder freigegeben, und sie leisten dafür keinen Support.
-- **Support:** Fragen und Fehlerberichte bitte über die
-  [Issues](https://github.com/dn-falk/somfy-freeathome-connector/issues) dieses Repositorys melden,
-  nicht beim Support von Somfy oder Busch-Jaeger.
-- **Marken:** Somfy, TaHoma, io-homecontrol, Overkiz, free@home, Busch-free@home, Busch-Jaeger und
-  ABB sind Marken bzw. eingetragene Marken ihrer jeweiligen Inhaber. Sie werden hier nur verwendet,
-  um zu beschreiben, mit welchen Produkten das Addon zusammenarbeitet. Daraus ergibt sich keine
-  Verbindung zu den Markeninhabern und keine Empfehlung durch sie. Logos der Hersteller werden nicht
-  verwendet.
-- **Schnittstellen:** Das Addon nutzt ausschließlich offiziell dokumentierte Schnittstellen: die
-  lokale API der TaHoma Switch (Somfy Developer Mode) sowie die Local API und die Addon-Schnittstelle
-  des free@home System Access Point.
-- **Lizenz und Haftung:** MIT-Lizenz, siehe [LICENSE](LICENSE). Die Software wird ohne jede
-  Gewährleistung bereitgestellt; die Nutzung erfolgt auf eigene Gefahr.
+- **Not an official product:** This addon is an independent community project. It is not a product
+  of Somfy or ABB/Busch-Jaeger. These companies did not commission, review, certify or approve it,
+  and they do not provide support for it.
+- **Support:** Please report questions and bugs through the
+  [issues](https://github.com/dn-falk/somfy-freeathome-connector/issues) of this repository, not to
+  Somfy or Busch-Jaeger support.
+- **Trademarks:** Somfy, TaHoma, io-homecontrol, Overkiz, free@home, Busch-free@home, Busch-Jaeger and
+  ABB are trademarks or registered trademarks of their respective owners. They are only used here to
+  describe which products the addon works with. This implies no affiliation with the trademark
+  owners and no endorsement by them. No manufacturer logos are used.
+- **Interfaces:** The addon only uses officially documented interfaces: the local API of the TaHoma
+  Switch (Somfy Developer Mode) and the Local API and addon interface of the free@home System Access
+  Point.
+- **License and liability:** MIT license, see [LICENSE](LICENSE). The software is provided without
+  any warranty; use at your own risk.

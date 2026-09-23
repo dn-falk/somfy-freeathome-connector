@@ -4,7 +4,7 @@
  *   npm run mock -- --port 18443 --token dev-token --shutters "Wohnzimmer,Küche,Bad" --travel 20
  *
  * The addon connects to it via plain HTTP when started with TAHOMA_INSECURE_HTTP=1
- * (see README, section "Entwicklung").
+ * (see README, section "Development").
  */
 import { TahomaSimulator } from "../test/support/tahomaSimulator";
 
