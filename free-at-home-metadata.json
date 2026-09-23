@@ -1,8 +1,8 @@
 {
   "id": "de.dnfalk.freeathome.somfy",
   "name": {
-    "en": "Somfy TaHoma",
-    "de": "Somfy TaHoma"
+    "en": "Somfy-TaHoma-Connector (unofficial)",
+    "de": "Somfy-TaHoma-Connector (inoffiziell)"
   },
   "description": {
     "en": "Controls Somfy io roller shutters through the local API (Developer Mode) of a Somfy TaHoma Switch. Every roller shutter becomes a free@home blind actuator that can be linked to free@home push buttons, scenes and timers. Unofficial community addon, not affiliated with or endorsed by Somfy or ABB/Busch-Jaeger.",

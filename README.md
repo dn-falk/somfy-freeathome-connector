@@ -1,4 +1,4 @@
-# Somfy TaHoma für free@home (inoffizielles Addon)
+# Somfy-TaHoma-Connector für free@home (inoffiziell)
 
 free@home-Addon für den **System Access Point 2.0**, das **Somfy-io-Rollläden** über die lokale API
 (Developer Mode) einer **Somfy TaHoma Switch** steuert. Jeder Rollladen erscheint in free@home als
@@ -74,7 +74,8 @@ GitHub-Actions-Lauf bzw. an einem Release.
 - oder per Kommandozeile:
   `FREEATHOME_BASE_URL=http://<IP-SysAP> FREEATHOME_API_USERNAME=<Benutzer> FREEATHOME_API_PASSWORD=<Passwort> npx free-at-home-cli upload`
 
-Danach muss das Addon in der Addon-Liste als **aktiv** angezeigt werden.
+Danach erscheint das Addon in der Addon-Liste als **„Somfy-TaHoma-Connector (inoffiziell)“** und muss
+als **aktiv** angezeigt werden.
 
 ### 4. Einstellungen
 
