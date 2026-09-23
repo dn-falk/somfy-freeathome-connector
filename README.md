@@ -14,7 +14,7 @@ Zeitprogrammen verwenden.
 - **Konfiguration komplett in der Addon-Oberfläche** der free@home-App bzw. der SysAP-Weboberfläche.
 
 > Das Somfy **Connectivity Kit** wird nicht unterstützt. Somfy hat den Developer Mode auf dem Kit
-> abgeschaltet, es gibt dort keine lokale API mehr. Die Hintergründe stehen in [docs/analyse.md](docs/analyse.md).
+> abgeschaltet, es gibt dort keine lokale API mehr.
 
 ## Funktionen
 
@@ -169,9 +169,6 @@ src/
 test/                      Tests inkl. TaHoma-Simulator und Fake-System-Access-Point
 tools/mock-tahoma.ts       simulierte TaHoma Switch für die Entwicklung
 ```
-
-Die Analyse der Anbindungsmöglichkeiten (Connectivity Kit, HomeKit, Cloud, TaHoma Switch, RTS)
-und die Architekturentscheidungen stehen in [docs/analyse.md](docs/analyse.md).
 
 ## Lizenz
 
