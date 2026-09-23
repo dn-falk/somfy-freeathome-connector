@@ -2,6 +2,20 @@
 
 Stand: 23.09.2026 · Zielsystem: Busch-Jaeger/ABB free@home **System Access Point 2.0** + **Somfy Connectivity Kit**
 
+> **Entscheidung und Umsetzung (23.09.2026):** Es wird die **TaHoma Switch** mit ihrer lokalen API
+> verwendet (io-Motoren, nur Rollläden; das Connectivity Kit wird ersetzt). Das Addon ist umgesetzt;
+> Installation und Bedienung stehen in der [README](../README.md). Umgesetzt wurde die Architektur aus
+> Abschnitt 5 mit einem einzigen Backend (TaHoma lokal) und einer eigenen Steuerlogik je Rollladen
+> (Abschnitt 6).
+>
+> Seit der Analyse geklärt:
+> - Die Datenpunkt-IDs stimmen mit der Library überein (Unit-Test).
+> - Die Library 0.37 setzt eine TTL von 30 min für virtuelle Geräte.
+> - Das Addon läuft unter Node 18 und 22.
+> - Das Zusammenspiel mit der echten Library ist gegen einen simulierten SysAP getestet.
+>
+> Noch am echten System zu prüfen sind die Punkte 1, 2, 6 und 7 aus [Abschnitt 9](#9-offene-technische-punkte-am-echten-system-zu-prüfen).
+
 ---
 
 ## 1. Kurzfassung
@@ -338,6 +352,8 @@ Alternative zur manuellen Liste: Das Addon übernimmt **automatisch alle gefunde
 4. Welche Node-Version läuft auf dem SysAP (Vorlagen: Node 18)? Ist `chacha20-poly1305` im OpenSSL des Containers verfügbar?
 5. **HomeKit am Kit:** Bleibt der HAP-Port stabil? Kommen Events? Wird `CurrentPosition` während der Fahrt aktualisiert (wichtig für den Stopp)? Gibt es Tilt-Merkmale bei Jalousien?
 6. Wie hoch ist die Latenz real, gemessen vom Tastendruck bis zum Motorstart?
+7. Wie viel Speicher braucht das Addon auf dem SysAP? Auf x86-64 mit Node 18 sind es ca. 60–65 MB RSS
+   bei 64 MB Limit, der Großteil davon Node.js und die free@home-Library.
 
 ---
 

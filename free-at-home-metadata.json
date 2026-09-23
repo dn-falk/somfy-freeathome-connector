@@ -1,0 +1,146 @@
+{
+  "id": "de.dnfalk.freeathome.somfy",
+  "name": {
+    "en": "Somfy TaHoma",
+    "de": "Somfy TaHoma"
+  },
+  "description": {
+    "en": "Controls Somfy io roller shutters through the local API (Developer Mode) of a Somfy TaHoma Switch. Every roller shutter becomes a free@home blind actuator that can be linked to free@home push buttons, scenes and timers.",
+    "de": "Steuert Somfy-io-Rollläden über die lokale API (Developer Mode) einer Somfy TaHoma Switch. Jeder Rollladen wird zu einem free@home-Rollladenaktor, der mit free@home-Tastern, Szenen und Zeitprogrammen verknüpft werden kann."
+  },
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Dennis Nikolas Falk",
+  "url": "https://github.com/dn-falk/somfy-freeathome-connector",
+  "supportUrl": "https://github.com/dn-falk/somfy-freeathome-connector/issues",
+  "type": "app",
+  "entryPoint": "build/main.js",
+  "minSysapVersion": "3.0.0",
+  "accessControl": {
+    "networkAccess": true
+  },
+  "parameters": {
+    "connection": {
+      "name": "TaHoma Switch",
+      "items": {
+        "introduction": {
+          "name": "Preparation",
+          "name@de": "Vorbereitung",
+          "type": "separator",
+          "description": "In the TaHoma by Somfy app open the gateway settings, tap the gateway PIN 7 times to enable the Developer Mode and generate a token. Assign a fixed IP address to the TaHoma Switch in your router.",
+          "description@de": "In der App „TaHoma by Somfy“ die Einstellungen der Box öffnen, 7× auf die PIN der Box tippen (Developer Mode) und dort einen Token erzeugen. Der TaHoma Switch im Router eine feste IP-Adresse geben."
+        },
+        "host": {
+          "name": "IP address",
+          "name@de": "IP-Adresse",
+          "type": "string",
+          "required": true,
+          "description": "IP address (or host name) of the TaHoma Switch in the local network, e.g. 192.168.1.50.",
+          "description@de": "IP-Adresse (oder Hostname) der TaHoma Switch im Heimnetz, z. B. 192.168.1.50."
+        },
+        "port": {
+          "name": "Port",
+          "type": "number",
+          "min": 1,
+          "max": 65535,
+          "default": 8443,
+          "description": "Port of the local API (default 8443).",
+          "description@de": "Port der lokalen API (Standard 8443)."
+        },
+        "token": {
+          "name": "Token",
+          "type": "password",
+          "required": true,
+          "description": "Token generated in the Developer Mode menu of the TaHoma by Somfy app.",
+          "description@de": "Token aus dem Developer-Mode-Menü der App „TaHoma by Somfy“."
+        },
+        "gatewayPin": {
+          "name": "Gateway PIN (optional)",
+          "name@de": "PIN der Box (optional)",
+          "type": "string",
+          "description": "PIN of the TaHoma Switch (format 1234-5678-9012). If set, the certificate of the box is also checked for this PIN.",
+          "description@de": "PIN der TaHoma Switch (Format 1234-5678-9012). Wenn gesetzt, wird zusätzlich geprüft, ob das Zertifikat der Box zu dieser PIN gehört."
+        },
+        "verifyCertificate": {
+          "name": "Verify certificate",
+          "name@de": "Zertifikat prüfen",
+          "type": "boolean",
+          "default": true,
+          "description": "Only accept connections to boxes with a certificate issued by the Overkiz/Somfy root CA.",
+          "description@de": "Nur Verbindungen zu Boxen mit einem Zertifikat der Overkiz/Somfy-Root-CA akzeptieren."
+        },
+        "status": {
+          "name": "Status",
+          "type": "text",
+          "rpc": "getParameterConfig",
+          "rpcCallOn": "initial"
+        },
+        "resync": {
+          "name": "Reload roller shutters",
+          "name@de": "Rollläden neu einlesen",
+          "type": "button",
+          "buttonLabel": "Reload",
+          "buttonLabel@de": "Neu einlesen"
+        }
+      }
+    },
+    "behaviour": {
+      "name": "Behaviour",
+      "name@de": "Verhalten",
+      "items": {
+        "shortPressIdle": {
+          "name": "Short press while the shutter is not moving",
+          "name@de": "Kurzer Tastendruck, wenn der Rollladen steht",
+          "type": "select",
+          "default": "stop",
+          "options": [
+            { "key": "stop", "name": "Only stop (recommended)", "name@de": "Nur Stopp (empfohlen)" },
+            { "key": "my", "name": "Move to favourite position (my)", "name@de": "Lieblingsposition (my) anfahren" },
+            { "key": "move", "name": "Move completely up/down", "name@de": "Ganz auf/zu fahren" }
+          ],
+          "description": "A short press always stops a moving shutter. This option defines what a short press does when the shutter is not moving.",
+          "description@de": "Ein kurzer Tastendruck stoppt einen fahrenden Rollladen immer. Diese Option legt fest, was ein kurzer Tastendruck bei stehendem Rollladen bewirkt."
+        },
+        "excludedDevices": {
+          "name": "Excluded roller shutters",
+          "name@de": "Ausgeschlossene Rollläden",
+          "type": "string",
+          "description": "Comma separated names (as shown in the TaHoma app) of roller shutters that should not be created in free@home.",
+          "description@de": "Kommagetrennte Namen (wie in der TaHoma-App) von Rollläden, die nicht in free@home angelegt werden sollen."
+        }
+      }
+    },
+    "advanced": {
+      "name": "Advanced",
+      "name@de": "Erweitert",
+      "items": {
+        "pollInterval": {
+          "name": "Status update interval while idle (s)",
+          "name@de": "Statusabfrage im Ruhezustand (s)",
+          "type": "number",
+          "min": 1,
+          "max": 60,
+          "default": 3,
+          "description": "How often the addon asks the box for changes while no shutter is moving (e.g. operation with a Somfy remote). While a shutter moves the addon polls every second. Commands are always sent immediately.",
+          "description@de": "Wie oft das Addon die Box nach Änderungen fragt, solange kein Rollladen fährt (z. B. Bedienung über eine Somfy-Fernbedienung). Während einer Fahrt wird jede Sekunde abgefragt. Befehle werden immer sofort gesendet."
+        },
+        "batchWindow": {
+          "name": "Group commands window (ms)",
+          "name@de": "Bündelung von Gruppenbefehlen (ms)",
+          "type": "number",
+          "min": 0,
+          "max": 250,
+          "default": 10,
+          "description": "Commands for several shutters that arrive within this time are sent to the box as one request.",
+          "description@de": "Befehle für mehrere Rollläden, die innerhalb dieser Zeit eintreffen, werden in einer Anfrage an die Box gesendet."
+        },
+        "debug": {
+          "name": "Debug logging",
+          "name@de": "Debug-Protokoll",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  }
+}
