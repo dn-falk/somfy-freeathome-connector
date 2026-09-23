@@ -10,7 +10,8 @@ export type ShortPressIdleAction = "stop" | "my" | "move";
 /** Outputs towards free@home. */
 export interface ShutterView {
     setPosition(position: number): void;
-    setMovement(movement: Movement): void;
+    /** `lastDirection` is shown while the shutter stands still. */
+    setMovement(movement: Movement, lastDirection: Direction): void;
     setForce(mode: ForcedMode): void;
 }
 
@@ -75,6 +76,8 @@ export class ShutterController {
     private execution: ActiveExecution | undefined;
     private stoppedAt = Number.NEGATIVE_INFINITY;
     private movement: Movement = "stopped";
+    /** Direction of the last movement shown in free@home. */
+    private lastDirection: Direction | undefined;
     private movingSince = 0;
     private forced: "none" | "up" | "down" = "none";
     private preForcedPosition: number | undefined;
@@ -334,7 +337,7 @@ export class ShutterController {
 
     /** Writes all outputs again (after (re)connecting). */
     publish(): void {
-        this.view.setMovement(this.movement);
+        this.showMovement();
         if (this.position !== undefined)
             this.view.setPosition(this.position);
         this.view.setForce(this.forced === "none" ? "off" : this.forced);
@@ -392,6 +395,14 @@ export class ShutterController {
         if (this.movement === "stopped")
             this.movingSince = this.clock.now();
         this.movement = movement;
-        this.view.setMovement(movement);
+        if (movement !== "stopped")
+            this.lastDirection = movement;
+        this.showMovement();
+    }
+
+    private showMovement(): void {
+        // Not known after a start; a closed shutter got there moving down.
+        const lastDirection = this.lastDirection ?? (this.position === 100 ? "down" : "up");
+        this.view.setMovement(this.movement, lastDirection);
     }
 }

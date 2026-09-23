@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 
 import { Clock, ShutterView } from "../../src/bridge/shutterController";
-import { ForcedMode, Movement } from "../../src/fah/datapoints";
+import { Direction, ForcedMode, Movement } from "../../src/fah/datapoints";
 import { FahShutterDevice, RawChannelLike } from "../../src/fah/shutterDevice";
 
 export class FakeClock implements Clock {
@@ -20,14 +20,17 @@ export class FakeClock implements Clock {
 export class RecordingView implements ShutterView {
     positions: number[] = [];
     movements: Movement[] = [];
+    /** The last moving direction passed with each movement. */
+    directions: Direction[] = [];
     forces: ForcedMode[] = [];
 
     setPosition(position: number): void {
         this.positions.push(position);
     }
 
-    setMovement(movement: Movement): void {
+    setMovement(movement: Movement, lastDirection: Direction): void {
         this.movements.push(movement);
+        this.directions.push(lastDirection);
     }
 
     setForce(mode: ForcedMode): void {
@@ -36,6 +39,10 @@ export class RecordingView implements ShutterView {
 
     get lastMovement(): Movement | undefined {
         return this.movements[this.movements.length - 1];
+    }
+
+    get lastDirection(): Direction | undefined {
+        return this.directions[this.directions.length - 1];
     }
 
     get lastPosition(): number | undefined {

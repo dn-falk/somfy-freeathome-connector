@@ -14,7 +14,7 @@ export const PairingId = {
     AL_FORCED_UP_DOWN: 0x0028,
     /** Output: cause of forced operation (0 = not forced). */
     AL_INFO_FORCE: 0x0101,
-    /** Output: movement (0 stopped, 2 moving up, 3 moving down). */
+    /** Output: last moving direction and whether moving currently or not, see {@link moveInfoValue}. */
     AL_INFO_MOVE_UP_DOWN: 0x0120,
     /** Output (and input for scene playback): current position 0 (open) … 100 (closed). */
     AL_CURRENT_ABSOLUTE_POSITION_BLINDS_PERCENTAGE: 0x0121,
@@ -24,11 +24,21 @@ export type Direction = "up" | "down";
 export type Movement = "stopped" | Direction;
 export type ForcedMode = "off" | "restore" | "up" | "down";
 
-export const MOVE_INFO_VALUE: Record<Movement, string> = {
-    stopped: "0",
-    up: "2",
-    down: "3",
-};
+/**
+ * Value of `AL_INFO_MOVE_UP_DOWN`, which indicates the last moving direction and whether the
+ * shutter is moving: 0 stopped after moving up, 1 stopped after moving down, 2 moving up,
+ * 3 moving down.
+ */
+export function moveInfoValue(movement: Movement, lastDirection: Direction): string {
+    switch (movement) {
+        case "up":
+            return "2";
+        case "down":
+            return "3";
+        case "stopped":
+            return lastDirection === "down" ? "1" : "0";
+    }
+}
 
 export const FORCED_MODE_BY_VALUE: Record<string, ForcedMode> = {
     "0": "off",

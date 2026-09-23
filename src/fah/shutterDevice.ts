@@ -1,10 +1,11 @@
 import { Logger, errorMessage } from "../log";
 import {
+    Direction,
     ForcedMode,
-    MOVE_INFO_VALUE,
     Movement,
     PairingId,
     ShutterInput,
+    moveInfoValue,
     parseInputDatapoint,
     parsePercentage,
 } from "./datapoints";
@@ -64,8 +65,8 @@ export class FahShutterDevice {
         this.writeOutput(PairingId.AL_CURRENT_ABSOLUTE_POSITION_BLINDS_PERCENTAGE, String(Math.round(position)));
     }
 
-    setMovement(movement: Movement): void {
-        this.writeOutput(PairingId.AL_INFO_MOVE_UP_DOWN, MOVE_INFO_VALUE[movement]);
+    setMovement(movement: Movement, lastDirection: Direction): void {
+        this.writeOutput(PairingId.AL_INFO_MOVE_UP_DOWN, moveInfoValue(movement, lastDirection));
     }
 
     setForce(mode: ForcedMode): void {

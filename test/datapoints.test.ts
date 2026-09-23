@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import { PairingIds } from "@busch-jaeger/free-at-home";
 
-import { PairingId, parseInputDatapoint, parsePercentage } from "../src/fah/datapoints";
+import { PairingId, moveInfoValue, parseInputDatapoint, parsePercentage } from "../src/fah/datapoints";
 
 describe("free@home datapoints", () => {
     it("uses the pairing IDs of the free@home library", () => {
@@ -36,6 +36,13 @@ describe("free@home datapoints", () => {
         assert.deepEqual(parseInputDatapoint(PairingId.AL_FORCED_UP_DOWN, "2"), { type: "forced", mode: "up" });
         assert.deepEqual(parseInputDatapoint(PairingId.AL_FORCED_UP_DOWN, "3"), { type: "forced", mode: "down" });
         assert.equal(parseInputDatapoint(PairingId.AL_FORCED_UP_DOWN, "4"), undefined);
+    });
+
+    it("reports the movement with the last moving direction", () => {
+        assert.equal(moveInfoValue("stopped", "up"), "0");
+        assert.equal(moveInfoValue("stopped", "down"), "1");
+        assert.equal(moveInfoValue("up", "up"), "2");
+        assert.equal(moveInfoValue("down", "down"), "3");
     });
 
     it("ignores unknown datapoints", () => {

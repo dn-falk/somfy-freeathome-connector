@@ -62,6 +62,7 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         await waitFor(() => registry.channel("somfy-io-12").outputs.get(CURRENT_POSITION) === "100", 1_000, "initial position");
         assert.equal(registry.channel("somfy-io-11").outputs.get(CURRENT_POSITION), "0");
         assert.equal(registry.channel("somfy-io-11").outputs.get(INFO_MOVE), "0");
+        await waitFor(() => registry.channel("somfy-io-12").outputs.get(INFO_MOVE) === "1", 1_000, "closed shutter: last direction down");
         assert.equal(bridge?.status.shutterCount, 2);
     });
 
@@ -86,7 +87,7 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         assert.deepEqual(simulator.commandsSent(), [{ deviceURL: simulator.deviceURL("11"), name: "close", parameters: undefined }]);
 
         await waitFor(() => channel.outputs.get(CURRENT_POSITION) === "100", 3_000, "end position");
-        await waitFor(() => channel.outputs.get(INFO_MOVE) === "0", 3_000, "stopped");
+        await waitFor(() => channel.outputs.get(INFO_MOVE) === "1", 3_000, "stopped after moving down");
         assert.equal(simulator.position("11"), 100);
     });
 
@@ -103,7 +104,7 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         const position = simulator.position("11");
         assert.ok(position > 5 && position < 95, `stopped in between (${position})`);
         await waitFor(() => channel.outputs.get(CURRENT_POSITION) === String(position), 2_000, "position reported");
-        assert.equal(channel.outputs.get(INFO_MOVE), "0");
+        assert.equal(channel.outputs.get(INFO_MOVE), "1", "stopped after moving down");
     });
 
     it("stops a movement started with a Somfy remote", async () => {

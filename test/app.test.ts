@@ -106,7 +106,7 @@ describe("FahDeviceRegistry and FahShutterDevice", () => {
 
         device.setPosition(40);
         device.setPosition(40);
-        device.setMovement("down");
+        device.setMovement("down", "down");
         await new Promise((resolve) => setImmediate(resolve));
         assert.deepEqual(channel.writes, [
             { id: PairingId.AL_CURRENT_ABSOLUTE_POSITION_BLINDS_PERCENTAGE, value: "40" },

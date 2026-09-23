@@ -299,6 +299,33 @@ describe("ShutterController", () => {
             assert.equal(view.lastMovement, "up");
         });
 
+        it("shows the last moving direction while the shutter stands still", () => {
+            const shutter = controller();
+            shutter.applyStates([closure(40)]);
+            shutter.publish();
+            assert.equal(view.lastDirection, "up", "unknown after a start");
+
+            press(shutter, { type: "move", direction: "down" });
+            shutter.applyStates([moving(true)]);
+            shutter.applyStates([closure(60), moving(false)]);
+            assert.equal(view.lastMovement, "stopped");
+            assert.equal(view.lastDirection, "down");
+
+            shutter.applyStates([closure(60), target(0), moving(true)]);
+            assert.equal(view.lastMovement, "up");
+            shutter.applyStates([closure(0), moving(false)]);
+            assert.equal(view.lastMovement, "stopped");
+            assert.equal(view.lastDirection, "up");
+        });
+
+        it("assumes the last direction was down for a closed shutter after a start", () => {
+            const shutter = controller();
+            shutter.applyStates([closure(100)]);
+            shutter.publish();
+            assert.equal(view.lastMovement, "stopped");
+            assert.equal(view.lastDirection, "down");
+        });
+
         it("publishes all outputs on request", () => {
             const shutter = controller();
             shutter.applyStates([closure(30)]);

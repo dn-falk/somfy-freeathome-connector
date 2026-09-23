@@ -93,7 +93,7 @@ describe("addon process (real free@home library, fake System Access Point)", () 
         await check(() => simulator.commandsSent().some((command) => command.name === "close"), "close at the TaHoma");
         await check(() => sysap.output("somfy-io-11", PairingId.AL_INFO_MOVE_UP_DOWN) === "3", "moving down shown");
         await check(() => sysap.output("somfy-io-11", PairingId.AL_CURRENT_ABSOLUTE_POSITION_BLINDS_PERCENTAGE) === "100", "end position");
-        await check(() => sysap.output("somfy-io-11", PairingId.AL_INFO_MOVE_UP_DOWN) === "0", "stopped");
+        await check(() => sysap.output("somfy-io-11", PairingId.AL_INFO_MOVE_UP_DOWN) === "1", "stopped after moving down");
     });
 
     it("answers the status RPC of the addon settings", async () => {
