@@ -1,9 +1,15 @@
-# Somfy TaHoma für free@home
+# Somfy TaHoma für free@home (inoffizielles Addon)
 
 free@home-Addon für den **System Access Point 2.0**, das **Somfy-io-Rollläden** über die lokale API
 (Developer Mode) einer **Somfy TaHoma Switch** steuert. Jeder Rollladen erscheint in free@home als
 normaler Rollladenaktor und lässt sich mit free@home-Tastern, in der App, in Szenen und
 Zeitprogrammen verwenden.
+
+> **Inoffizielles Projekt:** Dieses Addon ist ein privates Community-Projekt. Es wird weder von Somfy
+> noch von ABB/Busch-Jaeger entwickelt, geprüft, unterstützt oder empfohlen und steht in keiner
+> Verbindung zu diesen Unternehmen. Die Markennamen werden nur genannt, um zu beschreiben, mit welchen
+> Produkten das Addon zusammenarbeitet. Details unter
+> [Lizenz und rechtliche Hinweise](#lizenz-und-rechtliche-hinweise).
 
 - **Lokal und ohne Cloud:** Das Addon läuft auf dem SysAP und spricht die TaHoma Switch direkt im
   Heimnetz an.
@@ -170,7 +176,21 @@ test/                      Tests inkl. TaHoma-Simulator und Fake-System-Access-P
 tools/mock-tahoma.ts       simulierte TaHoma Switch für die Entwicklung
 ```
 
-## Lizenz
+## Lizenz und rechtliche Hinweise
 
-MIT, siehe [LICENSE](LICENSE). Somfy, TaHoma, io-homecontrol, free@home, Busch-Jaeger und ABB sind
-Marken ihrer jeweiligen Inhaber. Dieses Projekt steht in keiner Verbindung zu diesen Unternehmen.
+- **Kein offizielles Produkt:** Dieses Addon ist ein unabhängiges Community-Projekt. Es ist kein
+  Produkt von Somfy oder ABB/Busch-Jaeger. Diese Unternehmen haben es weder beauftragt noch geprüft,
+  zertifiziert oder freigegeben, und sie leisten dafür keinen Support.
+- **Support:** Fragen und Fehlerberichte bitte über die
+  [Issues](https://github.com/dn-falk/somfy-freeathome-connector/issues) dieses Repositorys melden,
+  nicht beim Support von Somfy oder Busch-Jaeger.
+- **Marken:** Somfy, TaHoma, io-homecontrol, Overkiz, free@home, Busch-free@home, Busch-Jaeger und
+  ABB sind Marken bzw. eingetragene Marken ihrer jeweiligen Inhaber. Sie werden hier nur verwendet,
+  um zu beschreiben, mit welchen Produkten das Addon zusammenarbeitet. Daraus ergibt sich keine
+  Verbindung zu den Markeninhabern und keine Empfehlung durch sie. Logos der Hersteller werden nicht
+  verwendet.
+- **Schnittstellen:** Das Addon nutzt ausschließlich offiziell dokumentierte Schnittstellen: die
+  lokale API der TaHoma Switch (Somfy Developer Mode) sowie die Local API und die Addon-Schnittstelle
+  des free@home System Access Point.
+- **Lizenz und Haftung:** MIT-Lizenz, siehe [LICENSE](LICENSE). Die Software wird ohne jede
+  Gewährleistung bereitgestellt; die Nutzung erfolgt auf eigene Gefahr.
