@@ -63,7 +63,7 @@ npm ci
 npm run pack
 ```
 
-Das erzeugt `de.dnfalk.freeathome.somfy-<version>.tar`. Alternativ liegt das Archiv als Artefakt am
+Das erzeugt `de.dennisfalk.freeathome.somfy-<version>.tar`. Alternativ liegt das Archiv als Artefakt am
 GitHub-Actions-Lauf bzw. an einem Release.
 
 ### 3. Addon hochladen
