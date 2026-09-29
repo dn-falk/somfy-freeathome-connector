@@ -121,7 +121,7 @@ box is replaced and the motor is paired again, the devices and links in free@hom
 | Certificate errors in the journal | Check the gateway PIN; if necessary, turn off "Verify certificate". |
 | Roller shutter missing | Only io roller shutters (device class "RollerShutter") are included. Check "Excluded roller shutters", then use "Reload roller shutters". |
 | Roller shutter "not reachable" | The box reports the motor as not reachable (radio, power failure). |
-| Roller shutter reacts only after about a second | The addon passes a command on to the box within about 0.1 s after receiving it from free@home. The rest of the time passes before that in free@home (push button → SysAP → addon) and afterwards in the TaHoma Switch (box → radio → motor). With **Debug logging**, every feedback of the box is logged with the time since the command. |
+| Roller shutter reacts only after about a second | The addon passes a command on to the box within about 0.1 s after receiving it from free@home. The rest of the time passes before that in free@home (push button → SysAP → addon) and afterwards in the TaHoma Switch (box → radio → motor); in a test, the TaHoma app did not stop the shutter noticeably faster either. With **Debug logging**, every feedback of the box is logged with the time since the command. |
 | "Log" tab in the addon settings stays empty | **Download** there provides the complete log as a file. |
 
 The addon writes its messages to the SysAP journal. In the addon settings, **Log → Download** saves
@@ -133,7 +133,8 @@ turn on **Debug logging** in the settings.
 - Only **io-homecontrol roller shutters** (`io://…`, device class `RollerShutter`) are supported.
   RTS motors, venetian blinds with slats and awnings are not added to free@home.
 - Tested with unit and integration tests against a simulated TaHoma Switch and a simulated System
-  Access Point, both with the real free@home library. A test with real hardware is still pending.
+  Access Point, both with the real free@home library, and on a real installation (System Access
+  Point, TaHoma Switch, two io roller shutters).
 - **Memory:** The SysAP allows an addon at most 64 MB. On an x86-64 PC with Node 18 the addon uses
   about 60–65 MB with 12 shutters (briefly up to ~70 MB). About 44 MB of this is Node.js itself and
   most of the rest is the free@home library; the addon code itself accounts for little. On the
