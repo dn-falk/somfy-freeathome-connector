@@ -61,6 +61,8 @@ export type ExecutionState =
 /** Events are loosely typed; only the fields used by the addon are declared. */
 export interface TahomaEvent {
     name: string;
+    /** Time of the event on the box (ms since 1970). */
+    timestamp?: number;
     deviceURL?: string;
     deviceStates?: TahomaState[];
     execId?: string;

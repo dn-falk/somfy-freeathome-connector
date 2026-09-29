@@ -25,6 +25,11 @@ export type SessionState = "stopped" | "connecting" | "online" | "offline";
 
 const RETRY_DELAYS_MS = [1_000, 2_000, 5_000, 10_000, 20_000, 30_000];
 const AUTH_RETRY_DELAY_MS = 30_000;
+/**
+ * Wait before the first fetch after switching to fast polling. Activation usually comes with a
+ * command, which the box answers noticeably later while it handles a fetch at the same time.
+ */
+const ACTIVATION_FETCH_DELAY_MS = 500;
 const UNREGISTER_TIMEOUT_MS = 2_000;
 const STOP_WAIT_MS = 1_500;
 
@@ -55,7 +60,8 @@ export class GatewaySession extends EventEmitter {
     private active = false;
     private resyncRequested = false;
     private failures = 0;
-    private wake: (() => void) | undefined;
+    /** Ends the current wait (`sleep`) early. */
+    private wake: ((afterMs?: number) => void) | undefined;
     private loopPromise: Promise<void> | undefined;
     private error: Error | undefined;
     private version: string | undefined;
@@ -104,12 +110,12 @@ export class GatewaySession extends EventEmitter {
         }
     }
 
-    /** Switches to fast polling while shutters move; fetches immediately when activated. */
+    /** Switches to fast polling while shutters move; fetches soon after being activated. */
     setActive(active: boolean): void {
         const wasActive = this.active;
         this.active = active;
         if (active && !wasActive)
-            this.wake?.();
+            this.wake?.(Math.min(ACTIVATION_FETCH_DELAY_MS, this.options.activeIntervalMs));
     }
 
     /** Reads the device list again (e.g. after devices were added in the TaHoma app). */
@@ -197,13 +203,23 @@ export class GatewaySession extends EventEmitter {
                 resolve();
                 return;
             }
+            let deadline = Date.now() + ms;
             const done = () => {
                 clearTimeout(timer);
                 this.wake = undefined;
                 resolve();
             };
-            const timer = setTimeout(done, ms);
-            this.wake = done;
+            let timer = setTimeout(done, ms);
+            // Ends the wait now or after `afterMs`, if that is earlier than planned.
+            this.wake = (afterMs = 0) => {
+                if (afterMs <= 0) {
+                    done();
+                } else if (Date.now() + afterMs < deadline) {
+                    clearTimeout(timer);
+                    deadline = Date.now() + afterMs;
+                    timer = setTimeout(done, afterMs);
+                }
+            };
         });
     }
 

@@ -6,7 +6,7 @@ import * as https from "node:https";
 import { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { after, before, describe, it } from "node:test";
+import { after, before, describe, it, mock } from "node:test";
 
 import { Logger } from "../src/log";
 import { API_BASE_PATH, TahomaClient, TahomaClientOptions } from "../src/tahoma/client";
@@ -81,6 +81,29 @@ describe("TahomaClient (HTTP)", () => {
         assert.deepEqual(await api.fetchEvents(listenerId), []);
         await api.unregisterEventListener(listenerId);
         await assert.rejects(api.fetchEvents(listenerId), (error: TahomaError) => error.kind === "invalidListener");
+    });
+
+    it("logs requests in the debug log, routine event queries only if they fail or are slow", async () => {
+        const lines: string[] = [];
+        mock.method(console, "log", (line: unknown) => lines.push(String(line)));
+        Logger.silent = false;
+        Logger.debugEnabled = true;
+        try {
+            const api = client();
+            const listenerId = await api.registerEventListener();
+            await api.fetchEvents(listenerId);
+            await api.getDevices();
+            await assert.rejects(api.fetchEvents("unknown-listener"));
+        } finally {
+            mock.restoreAll();
+            Logger.silent = true;
+            Logger.debugEnabled = false;
+        }
+        assert.ok(lines.some((line) => /POST \/events\/register -> 200 \(\d+ ms\)$/.test(line)));
+        assert.ok(lines.some((line) => /GET \/setup\/devices -> 200 \(\d+ ms\)$/.test(line)));
+        const fetches = lines.filter((line) => line.includes("/fetch"));
+        assert.equal(fetches.length, 1, "only the failed event query");
+        assert.match(fetches[0], /POST \/events\/unknown-listener\/fetch -> 400 \(\d+ ms\)$/);
     });
 
     it("reports a wrong token as auth error", async () => {

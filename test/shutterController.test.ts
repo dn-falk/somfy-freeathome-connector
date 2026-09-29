@@ -5,6 +5,7 @@ import {
     MAX_MOVEMENT_MS,
     MOVING_REPORT_GRACE_MS,
     OPTIMISTIC_TIMEOUT_MS,
+    STOP_CONFIRMATION_MS,
     ShortPressIdleAction,
     ShutterCapabilities,
     ShutterController,
@@ -78,6 +79,50 @@ describe("ShutterController", () => {
             assert.deepEqual(sent, [{ name: "close" }, { name: "stop" }]);
             assert.equal(view.lastMovement, "stopped");
             assert.equal(shutter.isMoving, false);
+        });
+
+        it("waits for the box to confirm a stop", async () => {
+            sendResult = async (command) => `exec-${command.name}`;
+            const shutter = controller();
+            press(shutter, { type: "move", direction: "down" });
+            press(shutter, { type: "stopStep", direction: "down" });
+            assert.equal(shutter.isMoving, false);
+            assert.equal(shutter.hasPendingCommand, true, "stop not confirmed yet");
+
+            await flush();
+            shutter.onExecutionState("exec-close", "FAILED", "CMDCANCELLED");
+            shutter.onExecutionState("exec-stop", "IN_PROGRESS");
+            assert.equal(shutter.hasPendingCommand, true);
+            shutter.onExecutionState("exec-stop", "COMPLETED");
+            assert.equal(shutter.hasPendingCommand, false);
+        });
+
+        it("stops waiting for the confirmation of a stop after a timeout or a failed request", async () => {
+            const shutter = controller();
+            press(shutter, { type: "stopStep", direction: "down" });
+            clock.advance(STOP_CONFIRMATION_MS + 1);
+            shutter.tick();
+            assert.equal(shutter.hasPendingCommand, false);
+
+            sendResult = async () => {
+                throw new Error("ECONNREFUSED");
+            };
+            press(shutter, { type: "stopStep", direction: "down" });
+            assert.equal(shutter.hasPendingCommand, true);
+            await flush();
+            assert.equal(shutter.hasPendingCommand, false);
+        });
+
+        it("a new command replaces the wait for a stop", async () => {
+            sendResult = async (command) => `exec-${command.name}`;
+            const shutter = controller();
+            shutter.applyStates([closure(50)]);
+            press(shutter, { type: "stopStep", direction: "down" });
+            press(shutter, { type: "move", direction: "up" });
+            await flush();
+            shutter.onExecutionState("exec-stop", "COMPLETED");
+            assert.equal(shutter.hasPendingCommand, true, "open is still running");
+            assert.equal(view.lastMovement, "up");
         });
 
         it("short press stops a movement reported by the box (e.g. Somfy remote)", () => {

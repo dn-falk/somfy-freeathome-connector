@@ -41,6 +41,8 @@ type Method = "GET" | "POST" | "DELETE";
 
 const DEFAULT_TIMEOUT_MS = 5_000;
 const FETCH_TIMEOUT_MS = 10_000;
+/** Event fetches run every few seconds; the debug log only shows those that take this long. */
+const SLOW_FETCH_MS = 1_000;
 
 export function gatewayHostname(gatewayPin: string): string {
     return `gateway-${gatewayPin}.local`;
@@ -119,7 +121,7 @@ export class TahomaClient implements TahomaApi {
 
     async fetchEvents(listenerId: string): Promise<TahomaEvent[]> {
         const events = await this.request<TahomaEvent[] | undefined>(
-            "POST", `/events/${encodeURIComponent(listenerId)}/fetch`, undefined, FETCH_TIMEOUT_MS);
+            "POST", `/events/${encodeURIComponent(listenerId)}/fetch`, undefined, FETCH_TIMEOUT_MS, SLOW_FETCH_MS);
         return Array.isArray(events) ? events : [];
     }
 
@@ -138,20 +140,21 @@ export class TahomaClient implements TahomaApi {
         this.agent.destroy();
     }
 
-    private async request<T>(method: Method, path: string, body?: unknown, timeoutMs = this.timeoutMs): Promise<T> {
+    /** Successful responses faster than `logSlowerThanMs` are not logged (routine requests). */
+    private async request<T>(method: Method, path: string, body?: unknown, timeoutMs = this.timeoutMs, logSlowerThanMs = 0): Promise<T> {
         try {
-            return await this.send<T>(method, path, body, timeoutMs);
+            return await this.send<T>(method, path, body, timeoutMs, logSlowerThanMs);
         } catch (error) {
             // A keep-alive socket closed by the box: the request did not reach it, send it again.
             if (isStaleSocketError(error)) {
                 this.log.debug(`${method} ${path}: stale connection, retrying`);
-                return this.send<T>(method, path, body, timeoutMs);
+                return this.send<T>(method, path, body, timeoutMs, logSlowerThanMs);
             }
             throw error;
         }
     }
 
-    private send<T>(method: Method, path: string, body: unknown, timeoutMs: number): Promise<T> {
+    private send<T>(method: Method, path: string, body: unknown, timeoutMs: number, logSlowerThanMs: number): Promise<T> {
         return new Promise<T>((resolve, reject) => {
             const payload = body === undefined ? undefined : Buffer.from(JSON.stringify(body));
             const headers: http.OutgoingHttpHeaders = {
@@ -178,7 +181,9 @@ export class TahomaClient implements TahomaApi {
                 res.on("end", () => {
                     const text = Buffer.concat(chunks).toString("utf8");
                     const status = res.statusCode ?? 0;
-                    this.log.debug(`${method} ${path} -> ${status} (${Date.now() - started} ms)`);
+                    const elapsed = Date.now() - started;
+                    if (elapsed >= logSlowerThanMs || status < 200 || status >= 300)
+                        this.log.debug(`${method} ${path} -> ${status} (${elapsed} ms)`);
                     if (status < 200 || status >= 300) {
                         reject(apiError(status, text));
                         return;

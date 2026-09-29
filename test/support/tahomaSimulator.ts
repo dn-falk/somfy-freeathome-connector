@@ -25,6 +25,11 @@ export interface SimulatorOptions {
     tickMs?: number;
     /** Extra non-shutter devices returned by /setup/devices. */
     extraDevices?: TahomaDevice[];
+    /**
+     * Time until a stop takes effect and is reported. A running command is cancelled right
+     * away, like on the real box, which confirms a stop only after a second or more.
+     */
+    stopDelayMs?: number;
     log?: (message: string) => void;
 }
 
@@ -75,6 +80,7 @@ export class TahomaSimulator {
 
     private readonly shutters = new Map<string, Shutter>();
     private readonly listeners = new Map<string, TahomaEvent[]>();
+    private readonly timers = new Set<NodeJS.Timeout>();
     private readonly tickMs: number;
     private server: http.Server | undefined;
 
@@ -116,6 +122,8 @@ export class TahomaSimulator {
             if (shutter.timer)
                 clearInterval(shutter.timer);
         }
+        this.timers.forEach((timer) => clearTimeout(timer));
+        this.timers.clear();
         const server = this.server;
         this.server = undefined;
         if (!server)
@@ -321,10 +329,29 @@ export class TahomaSimulator {
             case "my":
                 return this.startMovement(shutter, shutter.myPosition, execution);
             case "stop":
+                if (this.options.stopDelayMs)
+                    return this.delayedStop(shutter, execution, this.options.stopDelayMs);
                 return this.stopMovement(shutter);
             default:
                 return;
         }
+    }
+
+    private delayedStop(shutter: Shutter, execution: Execution, delayMs: number): void {
+        this.cancelExecution(shutter);
+        // The stop is the running execution now, a newer command cancels it.
+        shutter.execId = execution.execId;
+        execution.remaining.add(shutter.deviceURL);
+        const timer = setTimeout(() => {
+            this.timers.delete(timer);
+            if (shutter.execId !== execution.execId)
+                return;
+            shutter.execId = undefined;
+            this.stopMovement(shutter);
+            execution.remaining.delete(shutter.deviceURL);
+            this.finishIfDone(execution);
+        }, delayMs);
+        this.timers.add(timer);
     }
 
     private startMovement(shutter: Shutter, target: number, execution: Execution | undefined): void {

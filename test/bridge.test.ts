@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { afterEach, describe, it } from "node:test";
+import { afterEach, describe, it, mock } from "node:test";
 
 import { Bridge, BridgeSettings } from "../src/bridge/bridge";
 import { PairingId } from "../src/fah/datapoints";
 import { Logger } from "../src/log";
 import { FakeRegistry, delay, waitFor } from "./support/fakes";
-import { SimulatedShutterOptions, TahomaSimulator } from "./support/tahomaSimulator";
+import { SimulatedShutterOptions, SimulatorOptions, TahomaSimulator } from "./support/tahomaSimulator";
 
 Logger.silent = true;
 
@@ -21,12 +21,20 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
     let registry: FakeRegistry;
 
     afterEach(async () => {
+        mock.restoreAll();
+        Logger.silent = true;
+        Logger.debugEnabled = false;
         await bridge?.stop();
         bridge = undefined;
         await simulator.close();
     });
 
-    async function setup(shutters: SimulatedShutterOptions[], overrides: Partial<BridgeSettings> = {}, expectedDevices = shutters.length) {
+    async function setup(
+        shutters: SimulatedShutterOptions[],
+        overrides: Partial<BridgeSettings> = {},
+        expectedDevices = shutters.length,
+        simulatorOptions: Partial<SimulatorOptions> = {},
+    ) {
         simulator = new TahomaSimulator({
             shutters,
             tickMs: 20,
@@ -35,6 +43,7 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
                 label: "Licht",
                 definition: { uiClass: "Light", commands: [{ commandName: "on" }] },
             }],
+            ...simulatorOptions,
         });
         const port = await simulator.listen();
         registry = new FakeRegistry();
@@ -91,6 +100,21 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         assert.equal(simulator.position("11"), 100);
     });
 
+    it("does not query events while a command from idle is on its way to the box", async () => {
+        // The box answers a command later while it handles an event query at the same time.
+        await setup([{ id: "11", label: "Wohnzimmer", position: 0 }], { idlePollIntervalMs: 5_000, batchWindowMs: 10 });
+        await delay(100);
+        const pressed = Date.now();
+        registry.channel("somfy-io-11").input(MOVE, "1");
+        await waitFor(() => simulator.executions.length === 1, 1_000, "command at the box");
+        const apply = simulator.requests.find((request) => request.path === "/exec/apply")!;
+        await delay(100);
+        const fetches = simulator.requests.filter((request) => request.path.endsWith("/fetch")
+            && request.at >= pressed && request.at <= apply.at + 100);
+        assert.deepEqual(fetches, []);
+        await waitFor(() => registry.channel("somfy-io-11").outputs.get(CURRENT_POSITION) === "100", 5_000, "feedback follows");
+    });
+
     it("short press stops the shutter in between", async () => {
         await setup([{ id: "11", label: "Wohnzimmer", position: 0, travelMs: 1_000 }]);
         const channel = registry.channel("somfy-io-11");
@@ -105,6 +129,53 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         assert.ok(position > 5 && position < 95, `stopped in between (${position})`);
         await waitFor(() => channel.outputs.get(CURRENT_POSITION) === String(position), 2_000, "position reported");
         assert.equal(channel.outputs.get(INFO_MOVE), "1", "stopped after moving down");
+    });
+
+    it("keeps asking the box every second until it confirms a stop", async () => {
+        // The real box reports the end of a stop only after a second or more. The position must
+        // not wait for the (long) idle interval.
+        await setup([{ id: "11", label: "Wohnzimmer", position: 0, travelMs: 4_000 }],
+            { idlePollIntervalMs: 6_000 }, 1, { stopDelayMs: 1_200 });
+        const channel = registry.channel("somfy-io-11");
+
+        channel.input(MOVE, "1");
+        await delay(400);
+        const stopped = Date.now();
+        channel.input(STOP_STEP, "1");
+        await waitFor(() => !simulator.isMoving("11"), 3_000, "shutter stopped");
+        const position = simulator.position("11");
+        assert.ok(position > 5 && position < 95, `stopped in between (${position})`);
+
+        await waitFor(() => channel.outputs.get(CURRENT_POSITION) === String(position), 4_000, "position reported");
+        const elapsed = Date.now() - stopped;
+        assert.ok(elapsed < 3_500, `position reported ${elapsed} ms after the stop`);
+
+        // Back to the idle interval once the stop is confirmed.
+        const fetches = () => simulator.requests.filter((request) => request.path.endsWith("/fetch")).length;
+        const before = fetches();
+        await delay(2_500);
+        assert.ok(fetches() - before <= 1, `${fetches() - before} fetches while idle`);
+    });
+
+    it("relates the events of the box to the commands in the debug log", async () => {
+        await setup([{ id: "11", label: "Wohnzimmer", position: 0, travelMs: 1_000 }]);
+        const lines: string[] = [];
+        mock.method(console, "log", (line: unknown) => lines.push(String(line)));
+        Logger.silent = false;
+        Logger.debugEnabled = true;
+        const channel = registry.channel("somfy-io-11");
+
+        channel.input(MOVE, "1");
+        await delay(200);
+        channel.input(STOP_STEP, "1");
+        await waitFor(() => lines.some((line) => /ExecutionStateChangedEvent \S+ \S+ -> COMPLETED .*s after stop "Wohnzimmer"/.test(line)),
+            2_000, "stop execution in the log");
+        await waitFor(() => lines.some((line) => line.includes("DeviceStateChangedEvent \"Wohnzimmer\"")
+            && line.includes("core:MovingState=false") && /\[box \d\d:\d\d:\d\d\.\d{3}, [\d.]+ s after stop\]/.test(line)),
+            2_000, "end of the movement in the log");
+        assert.ok(lines.some((line) => /ExecutionStateChangedEvent \S+ IN_PROGRESS -> FAILED \(CMDCANCELLED\) .*s after close "Wohnzimmer"/.test(line)),
+            "cancelled close command");
+        assert.ok(!lines.some((line) => line.includes("/fetch")), "routine event queries are not logged");
     });
 
     it("stops a movement started with a Somfy remote", async () => {

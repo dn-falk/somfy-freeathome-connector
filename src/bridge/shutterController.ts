@@ -44,6 +44,8 @@ export const OPTIMISTIC_TIMEOUT_MS = 5_000;
 export const STOP_SUPPRESS_MS = 2_000;
 /** Safety net if the end of a movement is never reported. */
 export const MAX_MOVEMENT_MS = 180_000;
+/** Longest wait for the box to confirm a stop (the event polling stays fast meanwhile). */
+export const STOP_CONFIRMATION_MS = 10_000;
 
 interface PendingMovement {
     direction: Direction;
@@ -53,6 +55,11 @@ interface PendingMovement {
 interface ActiveExecution {
     execId: string | undefined;
     direction: Direction | undefined;
+    since: number;
+}
+
+interface PendingStop {
+    execId: string | undefined;
     since: number;
 }
 
@@ -74,6 +81,8 @@ export class ShutterController {
     private movementDirection: Direction = "down";
     private pending: PendingMovement | undefined;
     private execution: ActiveExecution | undefined;
+    /** A stop was sent and the box has not reported its end yet. */
+    private stopping: PendingStop | undefined;
     private stoppedAt = Number.NEGATIVE_INFINITY;
     private movement: Movement = "stopped";
     /** Direction of the last movement shown in free@home. */
@@ -105,9 +114,12 @@ export class ShutterController {
         return this.position;
     }
 
-    /** True while a movement command has been sent and its end was not yet reported. */
+    /**
+     * True while a command has been sent and its end was not yet reported. Meanwhile the box is
+     * asked for changes every second, so that e.g. the position after a stop shows up quickly.
+     */
     get hasPendingCommand(): boolean {
-        return this.pending !== undefined || this.execution !== undefined;
+        return this.pending !== undefined || this.execution !== undefined || this.stopping !== undefined;
     }
 
     get isForced(): boolean {
@@ -228,14 +240,22 @@ export class ShutterController {
 
     private stop(): void {
         const seq = ++this.commandSeq;
+        const now = this.clock.now();
         this.pending = undefined;
         this.execution = undefined;
+        this.stopping = { execId: undefined, since: now };
         this.reportedMoving = false;
-        this.stoppedAt = this.clock.now();
+        this.stoppedAt = now;
         this.log.info("stop");
         this.recompute();
-        this.send({ name: "stop" }).catch((error) => {
-            if (!(error instanceof CommandSupersededError) && seq === this.commandSeq)
+        this.send({ name: "stop" }).then((execId) => {
+            if (seq === this.commandSeq && this.stopping)
+                this.stopping.execId = execId;
+        }, (error) => {
+            if (seq !== this.commandSeq)
+                return;
+            this.stopping = undefined;
+            if (!(error instanceof CommandSupersededError))
                 this.log.warn(`stop failed: ${errorMessage(error)}`);
         });
     }
@@ -246,6 +266,7 @@ export class ShutterController {
         this.log.info(`${command.name}${command.parameters ? `(${command.parameters.join(", ")})` : ""}`);
         this.pending = direction ? { direction, since: now } : undefined;
         this.execution = { execId: undefined, direction, since: now };
+        this.stopping = undefined;
         if (direction)
             this.movementDirection = direction;
         this.recompute();
@@ -303,14 +324,24 @@ export class ShutterController {
         this.recompute();
     }
 
-    /** Tracks the execution of the own movement command (used if no MovingState is reported). */
+    /**
+     * Tracks the executions of the own commands: the end of a stop, and the end of a movement
+     * for devices without MovingState.
+     */
     onExecutionState(execId: string | undefined, newState: string | undefined, failureType?: string): void {
-        if (!execId || !this.execution || this.execution.execId !== execId)
+        if (!execId || (newState !== "COMPLETED" && newState !== "FAILED"))
             return;
-        if (newState !== "COMPLETED" && newState !== "FAILED")
+        const failure = newState === "FAILED" && failureType && failureType !== "CMDCANCELLED" ? failureType : undefined;
+        if (this.stopping?.execId === execId) {
+            this.stopping = undefined;
+            if (failure)
+                this.log.warn(`stop failed on the box: ${failure}`);
             return;
-        if (newState === "FAILED" && failureType && failureType !== "CMDCANCELLED")
-            this.log.warn(`command failed on the box: ${failureType}`);
+        }
+        if (!this.execution || this.execution.execId !== execId)
+            return;
+        if (failure)
+            this.log.warn(`command failed on the box: ${failure}`);
         this.execution = undefined;
         if (!this.capabilities.movingState)
             this.pending = undefined;
@@ -320,6 +351,8 @@ export class ShutterController {
     /** Timeouts; called periodically. */
     tick(): void {
         const now = this.clock.now();
+        if (this.stopping && now - this.stopping.since > STOP_CONFIRMATION_MS)
+            this.stopping = undefined;
         if (this.pending && this.capabilities.movingState && !this.reportedMoving
             && now - this.pending.since > OPTIMISTIC_TIMEOUT_MS) {
             // The box never reported a movement, e.g. "open" while already open.

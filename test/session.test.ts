@@ -138,7 +138,7 @@ describe("GatewaySession", () => {
         assert.equal(s.state, "offline");
     });
 
-    it("polls faster while active and wakes up immediately", async () => {
+    it("polls faster while active", async () => {
         const api = new ScriptedApi();
         const { session: s } = start(api, 60_000);
         await waitFor(() => api.count("fetch") === 1, 2_000, "first fetch");
@@ -148,6 +148,18 @@ describe("GatewaySession", () => {
         s.setActive(true);
         await waitFor(() => api.count("fetch") >= 4, 2_000, "fast polling");
         s.setActive(false);
+    });
+
+    it("fetches soon after being activated, but lets a command go first", async () => {
+        const api = new ScriptedApi();
+        session = new GatewaySession(api, { idleIntervalMs: 60_000, activeIntervalMs: 1_000 });
+        session.start();
+        await waitFor(() => api.count("fetch") === 1, 2_000, "first fetch");
+
+        session.setActive(true);
+        await delay(200);
+        assert.equal(api.count("fetch"), 1, "no fetch together with the command");
+        await waitFor(() => api.count("fetch") === 2, 1_000, "fetch shortly after the activation");
     });
 
     it("reads the devices again on request", async () => {
