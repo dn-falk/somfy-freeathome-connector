@@ -189,7 +189,7 @@ export class Bridge extends EventEmitter {
         for (const [deviceURL, shutter] of this.shutters) {
             if (present.has(deviceURL))
                 continue;
-            this.log.info(`roller shutter "${shutter.label}" is no longer available on the TaHoma`);
+            this.log.info(`roller shutter '${shutter.label}' is no longer available on the TaHoma`);
             shutter.device.unbind();
             await shutter.device.setAvailable(false);
             this.shutters.delete(deviceURL);
@@ -199,7 +199,7 @@ export class Bridge extends EventEmitter {
         const managed = new Set([...this.shutters.values()].map((shutter) => shutter.device));
         for (const device of await this.deps.devices.createdDevices()) {
             if (!managed.has(device) && device.isAvailable) {
-                this.log.info(`free@home device "${device.name}" has no roller shutter on the TaHoma, marking it unreachable`);
+                this.log.info(`free@home device '${device.name}' has no roller shutter on the TaHoma, marking it unreachable`);
                 await device.setAvailable(false);
             }
         }
@@ -212,7 +212,7 @@ export class Bridge extends EventEmitter {
         try {
             fahDevice = await this.deps.devices.getOrCreate(nativeIdFor(device.deviceURL), label);
         } catch (error) {
-            this.log.error(`could not create free@home device for "${label}": ${errorMessage(error)}`);
+            this.log.error(`could not create free@home device for '${label}': ${errorMessage(error)}`);
             return undefined;
         }
         if (this.stopped)
@@ -249,7 +249,7 @@ export class Bridge extends EventEmitter {
         if (shutter)
             shutter.lastCommand = { description: command.name, at };
         const result = this.queue.send(deviceURL, command);
-        result.then((execId) => this.rememberExecution(execId, `${command.name} "${label}"`, at), () => undefined);
+        result.then((execId) => this.rememberExecution(execId, `${command.name} '${label}'`, at), () => undefined);
         return result;
     }
 
@@ -312,9 +312,11 @@ export class Bridge extends EventEmitter {
 
     /**
      * One line per event for the debug log, e.g.
-     * `DeviceStateChangedEvent "Kitchen" core:MovingState=false [box 08:15:36.950, 1.25 s after stop]`.
-     * "box" is the time of the event on the box, the time since the command is based on it as well,
-     * so it does not include the waiting time until the next event query.
+     * `DeviceStateChangedEvent 'Kitchen' core:MovingState=false [1.25 s after stop]`.
+     * The time since the command is measured when the event is received, so it includes the wait
+     * for the next event query (up to a second while something moves). If an event carries the
+     * time it happened on the box ("box …"; the TaHoma Switch did not send one in a test), that
+     * time is used instead.
      */
     private describeEvent(event: TahomaEvent): string {
         const shutter = event.deviceURL ? this.shutters.get(event.deviceURL) : undefined;
@@ -351,7 +353,7 @@ export class Bridge extends EventEmitter {
 
     private deviceName(deviceURL: string | undefined): string {
         const shutter = deviceURL ? this.shutters.get(deviceURL) : undefined;
-        return shutter ? `"${shutter.label}"` : String(deviceURL);
+        return shutter ? `'${shutter.label}'` : String(deviceURL);
     }
 
     /** Updates the reachability; values are sent (again) once the device is reachable. */

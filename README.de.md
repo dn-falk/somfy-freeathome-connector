@@ -123,7 +123,7 @@ Box getauscht und der Motor neu eingelernt, bleiben Geräte und Verknüpfungen i
 | Zertifikatsfehler im Journal | PIN der Box prüfen; notfalls „Zertifikat prüfen“ ausschalten. |
 | Rollladen fehlt | Nur io-Rollläden (Geräteklasse „RollerShutter“) werden übernommen. „Ausgeschlossene Rollläden“ prüfen, dann „Rollläden neu einlesen“. |
 | Rollladen „nicht erreichbar“ | Die Box meldet den Motor als nicht erreichbar (Funk, Stromausfall). |
-| Rollladen reagiert erst nach etwa einer Sekunde | Das Addon gibt einen Befehl innerhalb von etwa 0,1 s an die Box weiter, nachdem es ihn von free@home erhalten hat. Die übrige Zeit vergeht vorher in free@home (Taster → SysAP → Addon) und danach in der TaHoma Switch (Box → Funk → Motor). Mit dem **Debug-Protokoll** steht bei jeder Rückmeldung der Box, wie lange nach dem Befehl sie kam. |
+| Rollladen reagiert erst nach etwa einer Sekunde | Das Addon gibt einen Befehl innerhalb von etwa 0,1 s an die Box weiter, nachdem es ihn von free@home erhalten hat. Die übrige Zeit vergeht vorher in free@home (Taster → SysAP → Addon) und danach in der TaHoma Switch (Box → Funk → Motor); im Test hat auch die TaHoma-App nicht spürbar schneller gestoppt. Mit dem **Debug-Protokoll** steht bei jeder Rückmeldung der Box, wie lange nach dem Befehl sie kam. |
 | Tab „Protokoll“ in den Addon-Einstellungen bleibt leer | Über **Herunterladen** lässt sich das vollständige Protokoll als Datei abrufen. |
 
 Die Meldungen des Addons stehen im Journal des SysAP. In den Addon-Einstellungen unter
@@ -136,8 +136,8 @@ Die Meldungen des Addons stehen im Journal des SysAP. In den Addon-Einstellungen
 - Unterstützt werden **io-homecontrol-Rollläden** (`io://…`, Geräteklasse `RollerShutter`).
   RTS-Motoren, Raffstores/Jalousien mit Lamellen und Markisen werden nicht angelegt.
 - Getestet wurde mit Unit- und Integrationstests gegen eine simulierte TaHoma Switch und einen
-  simulierten System Access Point, jeweils mit der echten free@home-Library. Ein Test mit echter
-  Hardware steht noch aus.
+  simulierten System Access Point, jeweils mit der echten free@home-Library, sowie in einer echten
+  Installation (System Access Point, TaHoma Switch, zwei io-Rollläden).
 - **Speicher:** Der SysAP erlaubt einem Addon höchstens 64 MB. Auf einem x86-64-PC mit Node 18 belegt
   das Addon mit 12 Rollläden etwa 60–65 MB (kurzzeitig bis ~70 MB). Davon entfallen rund 44 MB auf
   Node.js selbst und der größte Teil des Rests auf die free@home-Library; der Addon-Code macht nur

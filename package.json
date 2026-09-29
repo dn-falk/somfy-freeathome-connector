@@ -1,6 +1,6 @@
 {
   "name": "somfy-freeathome-connector",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "free@home addon: control Somfy io roller shutters via the local API of a Somfy TaHoma Switch",
   "private": true,
   "main": "build/main.js",
