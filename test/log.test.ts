@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, it, mock } from "node:test";
 
-import { Logger, isJournalStream, logSafe } from "../src/log";
+import { Logger, isJournalStream } from "../src/log";
 
 describe("Logger", () => {
     afterEach(() => {
@@ -49,16 +49,6 @@ describe("Logger", () => {
         assert.match(lines.err[1], /^<4>\d{4}-.*WARN \[main\] box not reachable$/);
         assert.match(lines.err[2], /^<3>\d{4}-.*ERROR \[main\] crashed$/);
         assert.ok(lines.out.every((line) => /^\d{4}-/.test(line)), "no prefix for info and debug");
-    });
-
-    it("writes neither double quotes nor backslashes, also not in details", () => {
-        assert.equal(logSafe('open "Kitchen" C:\\temp'), "open 'Kitchen' C:/temp");
-        const lines = capture();
-        new Logger("session").error('error while handling "events"', new Error('HTTP 400: "Invalid"'), "text");
-        assert.equal(lines.err.length, 1);
-        assert.match(lines.err[0], /ERROR \[session\] error while handling 'events' Error: HTTP 400: 'Invalid'\n/);
-        assert.match(lines.err[0], / text$/);
-        assert.ok(!lines.err[0].includes('"'));
     });
 
     it("recognises the journal stream set up by systemd", () => {

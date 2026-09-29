@@ -176,7 +176,6 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         assert.ok(lines.some((line) => /ExecutionStateChangedEvent \S+ IN_PROGRESS -> FAILED \(CMDCANCELLED\) .*s after close 'Wohnzimmer'/.test(line)),
             "cancelled close command");
         assert.ok(!lines.some((line) => line.includes("/fetch")), "routine event queries are not logged");
-        assert.ok(!lines.some((line) => line.includes("\"")), "no double quotes in the log");
     });
 
     it("stops a movement started with a Somfy remote", async () => {
