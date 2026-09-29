@@ -5,10 +5,10 @@
     "de": "Somfy-TaHoma-Connector (inoffiziell)"
   },
   "description": {
-    "en": "Controls Somfy io roller shutters through the local API (Developer Mode) of a Somfy TaHoma Switch. Every roller shutter becomes a free@home blind actuator that can be linked to free@home push buttons, scenes and timers. Unofficial community addon, not affiliated with or endorsed by Somfy or ABB/Busch-Jaeger.",
-    "de": "Steuert Somfy-io-Rollläden über die lokale API (Developer Mode) einer Somfy TaHoma Switch. Jeder Rollladen wird zu einem free@home-Rollladenaktor, der mit free@home-Tastern, Szenen und Zeitprogrammen verknüpft werden kann. Inoffizielles Community-Addon, ohne Verbindung zu Somfy oder ABB/Busch-Jaeger."
+    "en": "Controls Somfy io roller shutters through the local API (Developer Mode) of a Somfy TaHoma Switch. Every roller shutter becomes a free@home blind actuator that can be linked to free@home push buttons, scenes and timers. Unofficial community addon, not affiliated with or endorsed by Somfy or ABB/Busch-Jaeger. Instructions, source code and support: https://github.com/dn-falk/somfy-freeathome-connector",
+    "de": "Steuert Somfy-io-Rollläden über die lokale API (Developer Mode) einer Somfy TaHoma Switch. Jeder Rollladen wird zu einem free@home-Rollladenaktor, der mit free@home-Tastern, Szenen und Zeitprogrammen verknüpft werden kann. Inoffizielles Community-Addon, ohne Verbindung zu Somfy oder ABB/Busch-Jaeger. Anleitung, Quellcode und Support: https://github.com/dn-falk/somfy-freeathome-connector"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "author": "Dennis Nikolas Falk",
   "url": "https://github.com/dn-falk/somfy-freeathome-connector",
@@ -138,7 +138,9 @@
           "name": "Debug logging",
           "name@de": "Debug-Protokoll",
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "Detailed messages in the log of the addon, e.g. every feedback of the TaHoma Switch with the time since the command. Turn on to analyse problems.",
+          "description@de": "Ausführliche Meldungen im Protokoll des Addons, z. B. jede Rückmeldung der TaHoma Switch mit der Zeit seit dem Befehl. Zur Fehlersuche einschalten."
         }
       }
     }
