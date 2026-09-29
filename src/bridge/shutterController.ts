@@ -44,7 +44,7 @@ export const OPTIMISTIC_TIMEOUT_MS = 5_000;
 export const STOP_SUPPRESS_MS = 2_000;
 /** Safety net if the end of a movement is never reported. */
 export const MAX_MOVEMENT_MS = 180_000;
-/** Longest wait for the box to confirm a stop (the event polling stays fast meanwhile). */
+/** Longest wait for the box to report the end of a stop (the event polling stays fast meanwhile). */
 export const STOP_CONFIRMATION_MS = 10_000;
 
 interface PendingMovement {
@@ -61,6 +61,11 @@ interface ActiveExecution {
 interface PendingStop {
     execId: string | undefined;
     since: number;
+    /**
+     * The shutter was moving: wait until the box reports the standstill. The box often confirms
+     * the stop execution first and reports the standstill and the final position a bit later.
+     */
+    awaitStandstill: boolean;
 }
 
 /**
@@ -241,9 +246,10 @@ export class ShutterController {
     private stop(): void {
         const seq = ++this.commandSeq;
         const now = this.clock.now();
+        const awaitStandstill = this.capabilities.movingState && this.isMoving;
         this.pending = undefined;
         this.execution = undefined;
-        this.stopping = { execId: undefined, since: now };
+        this.stopping = { execId: undefined, since: now, awaitStandstill };
         this.reportedMoving = false;
         this.stoppedAt = now;
         this.log.info("stop");
@@ -333,9 +339,10 @@ export class ShutterController {
             return;
         const failure = newState === "FAILED" && failureType && failureType !== "CMDCANCELLED" ? failureType : undefined;
         if (this.stopping?.execId === execId) {
-            this.stopping = undefined;
             if (failure)
                 this.log.warn(`stop failed on the box: ${failure}`);
+            if (!this.stopping.awaitStandstill || newState === "FAILED")
+                this.stopping = undefined;
             return;
         }
         if (!this.execution || this.execution.execId !== execId)
@@ -402,6 +409,7 @@ export class ShutterController {
             return;
         }
         this.reportedMoving = false;
+        this.stopping = undefined;
         if (this.pending && now - this.pending.since < MOVING_REPORT_GRACE_MS)
             return;
         this.pending = undefined;

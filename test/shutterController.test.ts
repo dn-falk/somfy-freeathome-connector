@@ -81,16 +81,34 @@ describe("ShutterController", () => {
             assert.equal(shutter.isMoving, false);
         });
 
-        it("waits for the box to confirm a stop", async () => {
+        it("waits until the box reports the standstill after stopping a moving shutter", async () => {
             sendResult = async (command) => `exec-${command.name}`;
             const shutter = controller();
+            shutter.applyStates([closure(0), moving(false)]);
             press(shutter, { type: "move", direction: "down" });
+            clock.advance(MOVING_REPORT_GRACE_MS + 1);
+            shutter.applyStates([target(100), moving(true)]);
             press(shutter, { type: "stopStep", direction: "down" });
             assert.equal(shutter.isMoving, false);
             assert.equal(shutter.hasPendingCommand, true, "stop not confirmed yet");
 
             await flush();
             shutter.onExecutionState("exec-close", "FAILED", "CMDCANCELLED");
+            shutter.onExecutionState("exec-stop", "COMPLETED");
+            // Like the real box: the stop execution ends before the standstill is reported.
+            assert.equal(shutter.hasPendingCommand, true, "final position not reported yet");
+            shutter.applyStates([closure(24), moving(false)]);
+            assert.equal(shutter.hasPendingCommand, false);
+            assert.equal(view.lastPosition, 24);
+        });
+
+        it("a stop of a standing shutter ends with its execution", async () => {
+            sendResult = async (command) => `exec-${command.name}`;
+            const shutter = controller();
+            shutter.applyStates([closure(40), moving(false)]);
+            press(shutter, { type: "stopStep", direction: "down" });
+            assert.equal(shutter.hasPendingCommand, true);
+            await flush();
             shutter.onExecutionState("exec-stop", "IN_PROGRESS");
             assert.equal(shutter.hasPendingCommand, true);
             shutter.onExecutionState("exec-stop", "COMPLETED");

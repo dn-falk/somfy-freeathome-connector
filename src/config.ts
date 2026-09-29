@@ -95,7 +95,7 @@ export function parseConfiguration(configuration: unknown): ConfigResult {
     if (!hostText)
         problems.push({ en: "IP address of the TaHoma Switch is missing", de: "IP-Adresse der TaHoma Switch fehlt" });
     else if (!host)
-        problems.push({ en: `invalid IP address "${hostText}"`, de: `ungültige IP-Adresse „${hostText}“` });
+        problems.push({ en: `invalid IP address '${hostText}'`, de: `ungültige IP-Adresse „${hostText}“` });
 
     const token = stringValue(connection.token);
     if (!token)

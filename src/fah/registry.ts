@@ -31,7 +31,7 @@ export class FahDeviceRegistry {
     getOrCreate(nativeId: string, name: string): Promise<FahShutterDevice> {
         let device = this.devices.get(nativeId);
         if (!device) {
-            this.log.info(`creating free@home roller shutter "${name}" (${nativeId})`);
+            this.log.info(`creating free@home roller shutter '${name}' (${nativeId})`);
             device = this.factory.createShutter(nativeId, name)
                 .then((channel) => new FahShutterDevice(nativeId, name, channel, this.log.child(nativeId)));
             // Allow a new attempt if the creation failed.

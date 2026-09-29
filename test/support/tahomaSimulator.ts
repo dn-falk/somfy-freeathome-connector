@@ -26,10 +26,15 @@ export interface SimulatorOptions {
     /** Extra non-shutter devices returned by /setup/devices. */
     extraDevices?: TahomaDevice[];
     /**
-     * Time until a stop takes effect and is reported. A running command is cancelled right
-     * away, like on the real box, which confirms a stop only after a second or more.
+     * Time until a stop takes effect and its execution is completed. A running command is
+     * cancelled right away, like on the real box, which confirms a stop only after about a second.
      */
     stopDelayMs?: number;
+    /**
+     * Additional time until the standstill after a stop is reported (position, MovingState).
+     * The real box often reports it only after the stop execution has completed.
+     */
+    standstillReportDelayMs?: number;
     log?: (message: string) => void;
 }
 
@@ -329,27 +334,43 @@ export class TahomaSimulator {
             case "my":
                 return this.startMovement(shutter, shutter.myPosition, execution);
             case "stop":
-                if (this.options.stopDelayMs)
-                    return this.delayedStop(shutter, execution, this.options.stopDelayMs);
+                if (this.options.stopDelayMs || this.options.standstillReportDelayMs)
+                    return this.delayedStop(shutter, execution);
                 return this.stopMovement(shutter);
             default:
                 return;
         }
     }
 
-    private delayedStop(shutter: Shutter, execution: Execution, delayMs: number): void {
+    private delayedStop(shutter: Shutter, execution: Execution): void {
         this.cancelExecution(shutter);
         // The stop is the running execution now, a newer command cancels it.
         shutter.execId = execution.execId;
         execution.remaining.add(shutter.deviceURL);
-        const timer = setTimeout(() => {
-            this.timers.delete(timer);
+        this.later(this.options.stopDelayMs ?? 0, () => {
             if (shutter.execId !== execution.execId)
                 return;
             shutter.execId = undefined;
-            this.stopMovement(shutter);
+            // The motor stands still from now on.
+            if (shutter.timer)
+                clearInterval(shutter.timer);
+            shutter.timer = undefined;
+            shutter.position = Math.round(shutter.position);
+            shutter.target = shutter.position;
             execution.remaining.delete(shutter.deviceURL);
             this.finishIfDone(execution);
+            this.later(this.options.standstillReportDelayMs ?? 0, () => {
+                // Unless a newer command moves the shutter again.
+                if (!shutter.timer && shutter.moving)
+                    this.endMovement(shutter);
+            });
+        });
+    }
+
+    private later(delayMs: number, action: () => void): void {
+        const timer = setTimeout(() => {
+            this.timers.delete(timer);
+            action();
         }, delayMs);
         this.timers.add(timer);
     }

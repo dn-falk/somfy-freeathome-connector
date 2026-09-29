@@ -227,7 +227,7 @@ export class GatewaySession extends EventEmitter {
         try {
             this.emit(event, payload);
         } catch (error) {
-            this.log.error(`error while handling "${event}": ${errorMessage(error)}`, error);
+            this.log.error(`error while handling '${event}': ${errorMessage(error)}`, error);
         }
     }
 }

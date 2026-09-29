@@ -131,11 +131,11 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         assert.equal(channel.outputs.get(INFO_MOVE), "1", "stopped after moving down");
     });
 
-    it("keeps asking the box every second until it confirms a stop", async () => {
-        // The real box reports the end of a stop only after a second or more. The position must
-        // not wait for the (long) idle interval.
+    it("keeps asking the box every second until it reports the standstill after a stop", async () => {
+        // The real box completes the stop execution first and reports the standstill with the
+        // final position a second or two later. The position must not wait for the idle interval.
         await setup([{ id: "11", label: "Wohnzimmer", position: 0, travelMs: 4_000 }],
-            { idlePollIntervalMs: 6_000 }, 1, { stopDelayMs: 1_200 });
+            { idlePollIntervalMs: 6_000 }, 1, { stopDelayMs: 400, standstillReportDelayMs: 1_200 });
         const channel = registry.channel("somfy-io-11");
 
         channel.input(MOVE, "1");
@@ -168,14 +168,15 @@ describe("Bridge (end to end with simulated TaHoma)", () => {
         channel.input(MOVE, "1");
         await delay(200);
         channel.input(STOP_STEP, "1");
-        await waitFor(() => lines.some((line) => /ExecutionStateChangedEvent \S+ \S+ -> COMPLETED .*s after stop "Wohnzimmer"/.test(line)),
+        await waitFor(() => lines.some((line) => /ExecutionStateChangedEvent \S+ \S+ -> COMPLETED .*s after stop 'Wohnzimmer'/.test(line)),
             2_000, "stop execution in the log");
-        await waitFor(() => lines.some((line) => line.includes("DeviceStateChangedEvent \"Wohnzimmer\"")
+        await waitFor(() => lines.some((line) => line.includes("DeviceStateChangedEvent 'Wohnzimmer'")
             && line.includes("core:MovingState=false") && /\[box \d\d:\d\d:\d\d\.\d{3}, [\d.]+ s after stop\]/.test(line)),
             2_000, "end of the movement in the log");
-        assert.ok(lines.some((line) => /ExecutionStateChangedEvent \S+ IN_PROGRESS -> FAILED \(CMDCANCELLED\) .*s after close "Wohnzimmer"/.test(line)),
+        assert.ok(lines.some((line) => /ExecutionStateChangedEvent \S+ IN_PROGRESS -> FAILED \(CMDCANCELLED\) .*s after close 'Wohnzimmer'/.test(line)),
             "cancelled close command");
         assert.ok(!lines.some((line) => line.includes("/fetch")), "routine event queries are not logged");
+        assert.ok(!lines.some((line) => line.includes("\"")), "no double quotes in the log");
     });
 
     it("stops a movement started with a Somfy remote", async () => {
