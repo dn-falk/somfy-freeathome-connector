@@ -14,7 +14,7 @@ import {
     nativeIdFor,
 } from "../tahoma/rollerShutter";
 import { GatewaySession, SetupInfo } from "../tahoma/session";
-import { EventNames, StateNames, TahomaDevice, TahomaEvent } from "../tahoma/types";
+import { EventNames, StateNames, TahomaCommand, TahomaDevice, TahomaEvent } from "../tahoma/types";
 import { Clock, ShortPressIdleAction, ShutterCapabilities, ShutterController, systemClock } from "./shutterController";
 
 export interface BridgeSettings {
@@ -55,9 +55,22 @@ interface ManagedShutter {
     label: string;
     device: FahShutterDevice;
     controller: ShutterController;
+    /** The last command sent to the shutter (for the debug log). */
+    lastCommand?: SentCommand;
+}
+
+/** A command sent by the addon, used to put the events of the box in relation to it. */
+interface SentCommand {
+    description: string;
+    /** When the command was handed to the queue. */
+    at: number;
 }
 
 const ACTIVE_POLL_INTERVAL_MS = 1_000;
+/** Device state changes within this time after a command are logged with the time since it. */
+const COMMAND_RELATION_MS = 60_000;
+/** Executions whose end is never reported are forgotten after this many newer ones. */
+const MAX_TRACKED_EXECUTIONS = 50;
 
 export declare interface Bridge {
     on(event: "status", listener: (status: BridgeStatus) => void): this;
@@ -72,6 +85,8 @@ export class Bridge extends EventEmitter {
     private readonly queue: CommandQueue;
     private readonly session: GatewaySession;
     private readonly shutters = new Map<string, ManagedShutter>();
+    /** Commands of executions that have not finished yet, by execution id (for the debug log). */
+    private readonly executions = new Map<string, SentCommand>();
     private readonly clock: Clock;
     private readonly log: Logger;
     private tickTimer: NodeJS.Timeout | undefined;
@@ -212,7 +227,7 @@ export class Bridge extends EventEmitter {
         const controller = new ShutterController(
             device.deviceURL,
             fahDevice,
-            (command) => this.queue.send(device.deviceURL, command),
+            (command) => this.sendCommand(device.deviceURL, label, command),
             capabilities,
             { shortPressIdle: this.settings.shortPressIdle },
             this.clock,
@@ -227,10 +242,40 @@ export class Bridge extends EventEmitter {
         return shutter;
     }
 
+    /** Hands a command to the queue and remembers it to relate the events of the box to it. */
+    private sendCommand(deviceURL: string, label: string, command: TahomaCommand): Promise<string> {
+        const at = this.clock.now();
+        const shutter = this.shutters.get(deviceURL);
+        if (shutter)
+            shutter.lastCommand = { description: command.name, at };
+        const result = this.queue.send(deviceURL, command);
+        result.then((execId) => this.rememberExecution(execId, `${command.name} "${label}"`, at), () => undefined);
+        return result;
+    }
+
+    private rememberExecution(execId: string, description: string, at: number): void {
+        const known = this.executions.get(execId);
+        if (known) {
+            // Several shutters in one request.
+            known.description += `, ${description}`;
+            return;
+        }
+        this.executions.set(execId, { description, at });
+        if (this.executions.size > MAX_TRACKED_EXECUTIONS) {
+            const oldest = this.executions.keys().next();
+            if (!oldest.done)
+                this.executions.delete(oldest.value);
+        }
+    }
+
     private onEvents(events: TahomaEvent[]): void {
         let resync = false;
         for (const event of events) {
-            this.log.debug(`event ${event.name}${event.deviceURL ? ` ${event.deviceURL}` : ""}${event.execId ? ` ${event.execId} ${event.newState ?? ""}` : ""}`);
+            if (Logger.debugEnabled)
+                this.log.debug(`event ${this.describeEvent(event)}`);
+            if (event.name === EventNames.executionStateChanged && event.execId
+                && (event.newState === "COMPLETED" || event.newState === "FAILED"))
+                this.executions.delete(event.execId);
             switch (event.name) {
                 case EventNames.deviceStateChanged: {
                     const shutter = event.deviceURL ? this.shutters.get(event.deviceURL) : undefined;
@@ -263,6 +308,50 @@ export class Bridge extends EventEmitter {
         if (resync)
             this.session.requestResync();
         this.updateActivity();
+    }
+
+    /**
+     * One line per event for the debug log, e.g.
+     * `DeviceStateChangedEvent "Kitchen" core:MovingState=false [box 08:15:36.950, 1.25 s after stop]`.
+     * "box" is the time of the event on the box, the time since the command is based on it as well,
+     * so it does not include the waiting time until the next event query.
+     */
+    private describeEvent(event: TahomaEvent): string {
+        const shutter = event.deviceURL ? this.shutters.get(event.deviceURL) : undefined;
+        const parts: string[] = [event.name];
+        if (event.deviceURL)
+            parts.push(this.deviceName(event.deviceURL));
+        if (event.execId)
+            parts.push(event.execId);
+        if (event.newState)
+            parts.push(event.oldState ? `${event.oldState} -> ${event.newState}` : event.newState);
+        if (event.failureType)
+            parts.push(`(${event.failureType})`);
+        if (Array.isArray(event.deviceStates) && event.deviceStates.length > 0)
+            parts.push(event.deviceStates.map((state) => `${state?.name}=${formatValue(state?.value)}`).join(" "));
+        const execution = event.execId ? this.executions.get(event.execId) : undefined;
+        if (!execution && Array.isArray(event.actions)) {
+            // Executions started elsewhere (TaHoma app, scenarios).
+            parts.push(event.actions.map((action) => {
+                const commands = Array.isArray(action?.commands) ? action.commands.map((command) => command?.name).join("+") : "?";
+                return `${commands} ${this.deviceName(action?.deviceURL)}`;
+            }).join(", "));
+        }
+
+        const notes: string[] = [];
+        const at = eventTime(event);
+        if (at !== undefined)
+            notes.push(`box ${new Date(at).toISOString().substring(11, 23)}`);
+        const command = execution ?? shutter?.lastCommand;
+        const elapsed = command ? (at ?? this.clock.now()) - command.at : Number.NaN;
+        if (command && (execution || elapsed < COMMAND_RELATION_MS))
+            notes.push(`${(elapsed / 1000).toFixed(2)} s after ${command.description}`);
+        return notes.length > 0 ? `${parts.join(" ")} [${notes.join(", ")}]` : parts.join(" ");
+    }
+
+    private deviceName(deviceURL: string | undefined): string {
+        const shutter = deviceURL ? this.shutters.get(deviceURL) : undefined;
+        return shutter ? `"${shutter.label}"` : String(deviceURL);
     }
 
     /** Updates the reachability; values are sent (again) once the device is reachable. */
@@ -307,4 +396,13 @@ export class Bridge extends EventEmitter {
         if (!this.stopped)
             this.emit("status", this.status);
     }
+}
+
+function formatValue(value: unknown): string {
+    return value !== null && typeof value === "object" ? JSON.stringify(value) : String(value);
+}
+
+/** Time of the event on the box, if it sent a plausible one. */
+function eventTime(event: TahomaEvent): number | undefined {
+    return typeof event.timestamp === "number" && event.timestamp > 1e12 ? event.timestamp : undefined;
 }

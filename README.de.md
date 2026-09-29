@@ -58,7 +58,7 @@ Szenen), werden in **einer** Anfrage an die Box gebündelt.
 
 ### 2. Addon-Archiv herunterladen
 
-Das installierbare Archiv ist eine `.tar`-Datei. `de.dennisfalk.freeathome.somfy-<version>.tar` aus dem
+Das installierbare Archiv ist eine `.tar`-Datei. `somfy-tahoma-connector-<version>.tar` aus dem
 [neuesten Release](https://github.com/dn-falk/somfy-freeathome-connector/releases/latest)
 herunterladen.
 
@@ -95,7 +95,7 @@ In den Einstellungen des Addons:
 | Ausgeschlossene Rollläden | kommagetrennte Namen aus der TaHoma-App, die nicht in free@home erscheinen sollen |
 | Statusabfrage im Ruhezustand | Abfrageintervall für Änderungen, solange nichts fährt (Standard 3 s, während einer Fahrt 1 s). Befehle werden unabhängig davon **sofort** gesendet. |
 | Bündelung von Gruppenbefehlen | Zeitfenster, in dem Befehle für mehrere Rollläden zusammengefasst werden (Standard 10 ms) |
-| Debug-Protokoll | ausführliche Meldungen im Journal des SysAP |
+| Debug-Protokoll | ausführliche Meldungen im Protokoll des Addons, u. a. jede Rückmeldung der Box mit der Zeit seit dem Befehl |
 
 Nach dem Speichern verbindet sich das Addon. Die Zeile **Status** zeigt z. B. „Verbunden, 5 Rollläden“.
 **Rollläden neu einlesen** übernimmt neu eingelernte Rollläden aus der TaHoma, ohne das Addon neu zu
@@ -123,9 +123,13 @@ Box getauscht und der Motor neu eingelernt, bleiben Geräte und Verknüpfungen i
 | Zertifikatsfehler im Journal | PIN der Box prüfen; notfalls „Zertifikat prüfen“ ausschalten. |
 | Rollladen fehlt | Nur io-Rollläden (Geräteklasse „RollerShutter“) werden übernommen. „Ausgeschlossene Rollläden“ prüfen, dann „Rollläden neu einlesen“. |
 | Rollladen „nicht erreichbar“ | Die Box meldet den Motor als nicht erreichbar (Funk, Stromausfall). |
+| Rollladen reagiert erst nach etwa einer Sekunde | Das Addon gibt einen Befehl innerhalb von etwa 0,1 s an die Box weiter, nachdem es ihn von free@home erhalten hat. Die übrige Zeit vergeht vorher in free@home (Taster → SysAP → Addon) und danach in der TaHoma Switch (Box → Funk → Motor). Mit dem **Debug-Protokoll** steht bei jeder Rückmeldung der Box, wie lange nach dem Befehl sie kam. |
+| Tab „Protokoll“ in den Addon-Einstellungen bleibt leer | Über **Herunterladen** lässt sich das vollständige Protokoll als Datei abrufen. |
 
-Die Meldungen des Addons stehen im Journal des SysAP. Mit gesetzten `FREEATHOME_*`-Variablen
-zeigt `npm run journal` sie an. Für Details in den Einstellungen das **Debug-Protokoll** einschalten.
+Die Meldungen des Addons stehen im Journal des SysAP. In den Addon-Einstellungen unter
+**Protokoll → Herunterladen** lassen sie sich als Datei abrufen, mit gesetzten
+`FREEATHOME_*`-Variablen zeigt `npm run journal` sie an. Für Details in den Einstellungen das
+**Debug-Protokoll** einschalten.
 
 ## Einschränkungen
 
@@ -168,8 +172,8 @@ den Einstellungen IP des PCs, Port `18443` und Token `dev-token` eintragen.
 
 Releases legt GitHub Actions an. Enthält `main` eine Version, die noch nicht veröffentlicht ist,
 führt die CI die Tests aus, baut das Archiv und veröffentlicht das Release `v<Version>` mit der
-`.tar`-Datei. Für eine neue Version die Versionsnummer auf einem Branch erhöhen und in `main`
-mergen:
+Datei `somfy-tahoma-connector-<Version>.tar`. Für eine neue Version die Versionsnummer auf einem
+Branch erhöhen und in `main` mergen:
 
 ```bash
 npm version 1.1.0 --no-git-tag-version   # package.json und package-lock.json

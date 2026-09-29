@@ -57,7 +57,7 @@ scenes) are sent to the box in **one** request.
 
 ### 2. Download the addon archive
 
-The installable archive is a `.tar` file. Download `de.dennisfalk.freeathome.somfy-<version>.tar`
+The installable archive is a `.tar` file. Download `somfy-tahoma-connector-<version>.tar`
 from the [latest release](https://github.com/dn-falk/somfy-freeathome-connector/releases/latest).
 
 To build it yourself instead (Node.js 18 or later):
@@ -93,7 +93,7 @@ In the settings of the addon:
 | Excluded roller shutters | comma-separated names from the TaHoma app that should not appear in free@home |
 | Status update interval while idle | how often the addon asks for changes while nothing moves (default 3 s, 1 s while a shutter moves). Commands are always sent **immediately**, independent of this setting. |
 | Group commands window | time window in which commands for several shutters are combined (default 10 ms) |
-| Debug logging | detailed messages in the SysAP journal |
+| Debug logging | detailed messages in the log of the addon, including every feedback of the box with the time since the command |
 
 After saving, the addon connects. The **Status** line shows e.g. "Connected, 5 roller shutter(s)".
 **Reload roller shutters** adds newly paired shutters from the TaHoma without restarting the
@@ -121,9 +121,12 @@ box is replaced and the motor is paired again, the devices and links in free@hom
 | Certificate errors in the journal | Check the gateway PIN; if necessary, turn off "Verify certificate". |
 | Roller shutter missing | Only io roller shutters (device class "RollerShutter") are included. Check "Excluded roller shutters", then use "Reload roller shutters". |
 | Roller shutter "not reachable" | The box reports the motor as not reachable (radio, power failure). |
+| Roller shutter reacts only after about a second | The addon passes a command on to the box within about 0.1 s after receiving it from free@home. The rest of the time passes before that in free@home (push button → SysAP → addon) and afterwards in the TaHoma Switch (box → radio → motor). With **Debug logging**, every feedback of the box is logged with the time since the command. |
+| "Log" tab in the addon settings stays empty | **Download** there provides the complete log as a file. |
 
-The addon writes its messages to the SysAP journal. With the `FREEATHOME_*` variables set,
-`npm run journal` shows them. For details, turn on **Debug logging** in the settings.
+The addon writes its messages to the SysAP journal. In the addon settings, **Log → Download** saves
+them as a file; with the `FREEATHOME_*` variables set, `npm run journal` shows them. For details,
+turn on **Debug logging** in the settings.
 
 ## Limitations
 
@@ -164,8 +167,9 @@ PC, port `18443` and token `dev-token` in the settings.
 ### Releases
 
 Releases are created by GitHub Actions. When `main` contains a version that has not been released
-yet, CI runs the tests, builds the archive and publishes the release `v<version>` with the `.tar`
-file. To publish a new version, increase the version on a branch and merge it into `main`:
+yet, CI runs the tests, builds the archive and publishes the release `v<version>` with the file
+`somfy-tahoma-connector-<version>.tar`. To publish a new version, increase the version on a branch
+and merge it into `main`:
 
 ```bash
 npm version 1.1.0 --no-git-tag-version   # package.json and package-lock.json
