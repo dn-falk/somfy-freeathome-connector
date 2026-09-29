@@ -1,5 +1,4 @@
 import { fstatSync } from "node:fs";
-import { inspect } from "node:util";
 
 /** Syslog priorities understood by the systemd journal as line prefix ("<4>message"). */
 const PRIORITY_WARNING = 4;
@@ -45,38 +44,28 @@ export class Logger {
 
     debug(message: string, ...args: unknown[]): void {
         if (Logger.debugEnabled && !Logger.silent)
-            console.log(this.format("DEBUG", message, args));
+            console.log(this.format("DEBUG", message), ...args);
     }
 
     info(message: string, ...args: unknown[]): void {
         if (!Logger.silent)
-            console.log(this.format("INFO", message, args));
+            console.log(this.format("INFO", message), ...args);
     }
 
     warn(message: string, ...args: unknown[]): void {
         if (!Logger.silent)
-            console.warn(this.format("WARN", message, args, PRIORITY_WARNING));
+            console.warn(this.format("WARN", message, PRIORITY_WARNING), ...args);
     }
 
     error(message: string, ...args: unknown[]): void {
         if (!Logger.silent)
-            console.error(this.format("ERROR", message, args, PRIORITY_ERROR));
+            console.error(this.format("ERROR", message, PRIORITY_ERROR), ...args);
     }
 
-    private format(level: string, message: string, args: unknown[], priority?: number): string {
+    private format(level: string, message: string, priority?: number): string {
         const prefix = priority !== undefined && Logger.journalPriorities ? `<${priority}>` : "";
-        const details = args.map((arg) => ` ${typeof arg === "string" ? arg : inspect(arg)}`).join("");
-        return `${prefix}${new Date().toISOString()} ${level} [${this.scope}] ${logSafe(message + details)}`;
+        return `${prefix}${new Date().toISOString()} ${level} [${this.scope}] ${message}`;
     }
-}
-
-/**
- * Replaces double quotes and backslashes (also in error messages of the box or the library). The
- * log view in the addon settings of the System Access Point stays empty for this addon although
- * the downloaded log is complete; characters that need escaping in JSON are a suspected cause.
- */
-export function logSafe(text: string): string {
-    return text.replace(/"/g, "'").replace(/\\/g, "/");
 }
 
 export function errorMessage(error: unknown): string {
