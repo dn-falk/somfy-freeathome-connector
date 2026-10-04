@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-free@home-Addon für den **System Access Point 2.0**, das **Somfy-io-Rollläden** über die lokale API
+free@home-Addon für den **System Access Point 2.0 und 3.0**, das **Somfy-io-Rollläden** über die lokale API
 (Developer Mode) einer **Somfy TaHoma Switch** steuert. Jeder Rollladen erscheint in free@home als
 normaler Rollladenaktor und lässt sich mit free@home-Tastern, in der App, in Szenen und
 Zeitprogrammen verwenden.
@@ -40,7 +40,7 @@ Szenen), werden in **einer** Anfrage an die Box gebündelt.
 
 ## Voraussetzungen
 
-- free@home **System Access Point 2.0** mit Firmware **3.0 oder neuer**
+- free@home **System Access Point 2.0** (Firmware **3.0 oder neuer**) oder **System Access Point 3.0**
 - In der free@home-next-App: **Mehr → Installationseinstellungen → Local API** aktiviert
 - **Somfy TaHoma Switch** mit eingelernten **io-homecontrol-Rollläden**
 
