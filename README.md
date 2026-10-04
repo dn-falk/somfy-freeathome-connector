@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-free@home addon for the **System Access Point 2.0** that controls **Somfy io roller shutters** through
+free@home addon for the **System Access Point 2.0 and 3.0** that controls **Somfy io roller shutters** through
 the local API (Developer Mode) of a **Somfy TaHoma Switch**. Every roller shutter shows up in
 free@home as a regular blind actuator and can be used with free@home push buttons, in the app, in
 scenes and in timers.
@@ -39,7 +39,7 @@ scenes) are sent to the box in **one** request.
 
 ## Requirements
 
-- free@home **System Access Point 2.0** with firmware **3.0 or later**
+- free@home **System Access Point 2.0** (firmware **3.0 or later**) or **System Access Point 3.0**
 - In the free@home next app: **More → Installation settings → Local API** enabled
 - **Somfy TaHoma Switch** with paired **io-homecontrol roller shutters**
 
