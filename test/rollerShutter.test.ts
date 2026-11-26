@@ -52,6 +52,14 @@ describe("roller shutter helpers", () => {
         assert.match(window, /^'Dachfenster' \S+ \[ignored: uiClass\] uiClass=Window widget=PositionableTiltedWindow /);
         assert.match(describeDevice({ deviceURL: "internal://1234-5678-9012/pod/0", label: "Box" }),
             /\[ignored: not io-homecontrol\] uiClass=- widget=- controllable=- commands=- states=-$/);
+
+        const wifi = describeDevice({
+            deviceURL: "internal://1234-5678-9012/wifi/0",
+            label: "INTERNAL (wifi/0)",
+            states: [{ name: "internal:CurrentInfraConfigState", value: "MeinWLAN" }, { name: "internal:SignalStrengthState", value: 43 }],
+        });
+        assert.ok(wifi.endsWith("states=internal:CurrentInfraConfigState,internal:SignalStrengthState"), wifi);
+        assert.ok(!wifi.includes("MeinWLAN"));
     });
 
     it("accepts io roller shutters", () => {

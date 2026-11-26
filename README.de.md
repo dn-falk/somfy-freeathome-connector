@@ -95,7 +95,7 @@ In den Einstellungen des Addons:
 | Ausgeschlossene Rollläden | kommagetrennte Namen aus der TaHoma-App, die nicht in free@home erscheinen sollen |
 | Statusabfrage im Ruhezustand | Abfrageintervall für Änderungen, solange nichts fährt (Standard 3 s, während einer Fahrt 1 s). Befehle werden unabhängig davon **sofort** gesendet. |
 | Bündelung von Gruppenbefehlen | Zeitfenster, in dem Befehle für mehrere Rollläden zusammengefasst werden (Standard 10 ms) |
-| Debug-Protokoll | ausführliche Meldungen im Protokoll des Addons, u. a. jede Rückmeldung der Box mit der Zeit seit dem Befehl und beim Verbinden eine Liste aller Geräte der Box, auch der nicht unterstützten (Typ, Befehle, Zustände; die PIN der Box ist unkenntlich gemacht) |
+| Debug-Protokoll | ausführliche Meldungen im Protokoll des Addons, u. a. jede Rückmeldung der Box mit der Zeit seit dem Befehl und beim Verbinden eine Liste aller Geräte der Box, auch der nicht unterstützten (Typ, Befehle, Zustände; die PIN der Box ist unkenntlich gemacht, WLAN-Name und IP-Adresse der Box stehen nicht in der Liste) |
 
 Nach dem Speichern verbindet sich das Addon. Die Zeile **Status** zeigt z. B. „Verbunden, 5 Rollläden“.
 **Rollläden neu einlesen** übernimmt neu eingelernte Rollläden aus der TaHoma, ohne das Addon neu zu
