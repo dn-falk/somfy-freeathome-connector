@@ -22,7 +22,8 @@ export function isSupportedRollerShutter(device: TahomaDevice): boolean {
 
 /**
  * One line per device of the box for the debug log, including the devices the addon ignores.
- * Somebody with an unsupported device can post these lines, so the PIN of the box is masked:
+ * Somebody with an unsupported device can post these lines, so the PIN of the box is masked and
+ * the internal devices of the box are listed without state values (Wi-Fi name, IP address):
  * `'Dachfenster' io://<masked PIN>/123 [ignored: uiClass] uiClass=Window widget=... commands=... states=...`
  */
 export function describeDevice(device: TahomaDevice): string {
@@ -31,8 +32,9 @@ export function describeDevice(device: TahomaDevice): string {
     const states = new Map<string, string>();
     for (const state of definition?.states ?? [])
         states.set(state.name, state.name);
+    const withValues = !(device.deviceURL ?? "").startsWith("internal://");
     for (const state of device.states ?? [])
-        states.set(state.name, `${state.name}=${JSON.stringify(state.value)}`);
+        states.set(state.name, withValues ? `${state.name}=${JSON.stringify(state.value)}` : state.name);
     return `'${device.label}' ${url} [${isSupportedRollerShutter(device) ? "supported" : `ignored: ${ignoreReason(device)}`}]`
         + ` uiClass=${definition?.uiClass ?? "-"} widget=${definition?.widgetName ?? "-"}`
         + ` controllable=${device.controllableName ?? "-"}`
