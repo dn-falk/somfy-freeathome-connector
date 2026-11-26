@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
     availabilityFromStates,
+    describeDevice,
     isDeviceAvailable,
     isExcluded,
     isSupportedRollerShutter,
@@ -35,6 +36,24 @@ function ioRollerShutter(overrides: Partial<TahomaDevice> = {}): TahomaDevice {
 }
 
 describe("roller shutter helpers", () => {
+    it("describes supported and ignored devices for the debug log without the PIN of the box", () => {
+        const shutter = describeDevice(ioRollerShutter());
+        assert.match(shutter, /^'Wohnzimmer links' io:\/\/\*{4}-\*{4}-\*{4}\/12189845 \[supported\] uiClass=RollerShutter /);
+        assert.ok(!shutter.includes("1234-5678-9012"));
+        assert.ok(shutter.includes("controllable=io:RollerShutterWithLowSpeedManagementIOComponent"));
+        assert.ok(shutter.includes("commands=close,down,identify,my,open,"));
+        assert.ok(shutter.includes("core:ClosureState=0") && shutter.includes("core:MovingState,"));
+
+        const window = describeDevice(ioRollerShutter({
+            label: "Dachfenster",
+            controllableName: "io:WindowOpenerVeluxIOComponent",
+            definition: { uiClass: "Window", widgetName: "PositionableTiltedWindow", commands: [{ commandName: "open" }] },
+        }));
+        assert.match(window, /^'Dachfenster' \S+ \[ignored: uiClass\] uiClass=Window widget=PositionableTiltedWindow /);
+        assert.match(describeDevice({ deviceURL: "internal://1234-5678-9012/pod/0", label: "Box" }),
+            /\[ignored: not io-homecontrol\] uiClass=- widget=- controllable=- commands=- states=-$/);
+    });
+
     it("accepts io roller shutters", () => {
         assert.equal(isSupportedRollerShutter(ioRollerShutter()), true);
     });
