@@ -20,6 +20,36 @@ export function isSupportedRollerShutter(device: TahomaDevice): boolean {
     return commands.has("open") && commands.has("close") && commands.has("stop");
 }
 
+/**
+ * One line per device of the box for the debug log, including the devices the addon ignores.
+ * Somebody with an unsupported device can post these lines, so the PIN of the box is masked:
+ * `'Dachfenster' io://<masked PIN>/123 [ignored: uiClass] uiClass=Window widget=... commands=... states=...`
+ */
+export function describeDevice(device: TahomaDevice): string {
+    const definition = device.definition;
+    const url = (device.deviceURL ?? "").replace(/\d{4}-\d{4}-\d{4}/g, "****-****-****");
+    const states = new Map<string, string>();
+    for (const state of definition?.states ?? [])
+        states.set(state.name, state.name);
+    for (const state of device.states ?? [])
+        states.set(state.name, `${state.name}=${JSON.stringify(state.value)}`);
+    return `'${device.label}' ${url} [${isSupportedRollerShutter(device) ? "supported" : `ignored: ${ignoreReason(device)}`}]`
+        + ` uiClass=${definition?.uiClass ?? "-"} widget=${definition?.widgetName ?? "-"}`
+        + ` controllable=${device.controllableName ?? "-"}`
+        + ` commands=${[...commandNames(device)].sort().join(",") || "-"}`
+        + ` states=${[...states.values()].sort().join(",") || "-"}`;
+}
+
+function ignoreReason(device: TahomaDevice): string {
+    if (!device.deviceURL?.startsWith("io://"))
+        return "not io-homecontrol";
+    if (device.definition?.uiClass !== "RollerShutter")
+        return "uiClass";
+    if (device.enabled === false)
+        return "disabled";
+    return "open/close/stop missing";
+}
+
 export function commandNames(device: TahomaDevice): Set<string> {
     return new Set((device.definition?.commands ?? []).map((command) => command.commandName));
 }

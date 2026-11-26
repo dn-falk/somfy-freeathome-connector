@@ -93,7 +93,7 @@ In the settings of the addon:
 | Excluded roller shutters | comma-separated names from the TaHoma app that should not appear in free@home |
 | Status update interval while idle | how often the addon asks for changes while nothing moves (default 3 s, 1 s while a shutter moves). Commands are always sent **immediately**, independent of this setting. |
 | Group commands window | time window in which commands for several shutters are combined (default 10 ms) |
-| Debug logging | detailed messages in the log of the addon, including every feedback of the box with the time since the command |
+| Debug logging | detailed messages in the log of the addon, including every feedback of the box with the time since the command and, on connecting, a list of all devices of the box, also the unsupported ones (type, commands, states; the PIN of the box is masked) |
 
 After saving, the addon connects. The **Status** line shows e.g. "Connected, 5 roller shutter(s)".
 **Reload roller shutters** adds newly paired shutters from the TaHoma without restarting the

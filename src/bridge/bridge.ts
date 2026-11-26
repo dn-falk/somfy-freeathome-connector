@@ -10,6 +10,7 @@ import {
     hasState,
     isDeviceAvailable,
     isExcluded,
+    describeDevice,
     isSupportedRollerShutter,
     nativeIdFor,
 } from "../tahoma/rollerShutter";
@@ -173,6 +174,12 @@ export class Bridge extends EventEmitter {
         this.log.info(`found ${shutters.length} io roller shutter(s)`
             + (shutters.length !== wanted.length ? `, ${shutters.length - wanted.length} excluded` : "")
             + (wanted.length ? `: ${wanted.map((device) => device.label).join(", ")}` : ""));
+
+        if (Logger.debugEnabled) {
+            this.log.debug(`the box reports ${devices.length} device(s):`);
+            for (const device of devices)
+                this.log.debug(`device ${describeDevice(device)}`);
+        }
 
         const present = new Set<string>();
         for (const device of wanted) {
